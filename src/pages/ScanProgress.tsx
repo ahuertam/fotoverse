@@ -1,19 +1,19 @@
 /**
  * Página de progreso de escaneo.
  *
- * - Suscrita al evento `scan_progress` para el `session_id` de la URL.
+ * - Hook `useScanProgress` (con catch-up) gestiona eventos + estado
+ *   inicial de la sesión.
  * - Muestra fase actual, contador, path actual.
  * - Botón Cancelar invoca `cancelScan`.
- * - Cuando llega `scan_completed`, muestra resumen y botón "Ver duplicados"
- *   (que en Fase 3+ navegará a /review/:id/mode1).
+ * - Cuando llega `scan_completed` (o se detecta en el catch-up),
+ *   muestra resumen y botón "Revisar duplicados (Modo 1) →".
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useScanProgress } from "../hooks/useScanProgress";
-import { cancelScan, getScanStatus } from "../lib/tauri";
-import type { ScanSession } from "../lib/types";
+import { cancelScan } from "../lib/tauri";
 
 function phaseLabel(phase: string): string {
   switch (phase) {
@@ -37,26 +37,10 @@ function ScanProgressPage() {
   const navigate = useNavigate();
   const sessionId = id != null ? Number(id) : null;
 
-  const [session, setSession] = useState<ScanSession | null>(null);
   const [cancelling, setCancelling] = useState(false);
-  const { progress, completed } = useScanProgress(sessionId);
+  const { progress, completed, initialStatus } = useScanProgress(sessionId);
 
-  // Carga inicial del estado de la sesión (para el header).
-  useEffect(() => {
-    if (sessionId == null) return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const status = await getScanStatus(sessionId);
-        if (!cancelled) setSession(status.session);
-      } catch {
-        if (!cancelled) setSession(null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId]);
+  const session = initialStatus?.session ?? null;
 
   async function handleCancel() {
     if (sessionId == null) return;
