@@ -1,0 +1,29 @@
+[package]
+name = "fotoverse"
+version = "0.1.0"
+description = "Encuentra duplicados en tu biblioteca de fotos y vídeos"
+authors = ["Alejandro Huerta <ahuertam@yahoo.es>"]
+edition = "2021"
+rust-version = "1.75"
+
+# Ver más claves y definiciones en https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# El sufijo `_lib` parece redundante pero es necesario para hacer único
+# el nombre de la lib y no chocar con el bin (issue sólo en Windows).
+# Ver https://github.com/rust-lang/cargo/issues/8519
+name = "fotoverse_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Logging estructurado (Fase 1)
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

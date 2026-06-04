@@ -1,0 +1,7 @@
+# pnpm ≥ 11 config for fotoverse.
+# https://pnpm.io/settings
+
+# Whitelist of packages allowed to run install scripts.
+# Keep this list short and audited.
+allowBuilds:
+  esbuild: true
