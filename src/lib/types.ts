@@ -62,3 +62,39 @@ export interface ScanError {
 
 /** Modos de detección que el usuario puede activar. */
 export type ScanMode = "exact" | "perceptual" | "manual";
+
+// ---------------------------------------------------------------------------
+// Modo 1 — Duplicados exactos
+// ---------------------------------------------------------------------------
+
+/** Cabecera de un grupo (espejo de `detect::exact::ExactGroup`). */
+export interface ExactGroup {
+  id: number;
+  session_id: number;
+  filename: string;
+  ext: string;
+  ctime_ns: number;
+  size_bytes: number;
+  member_count: number;
+  reviewed: boolean;
+}
+
+/** Miembro de un grupo (espejo de `detect::exact::ExactGroupMember`). */
+export interface ExactGroupMember {
+  id: number;
+  path: string;
+  size_bytes: number;
+  ctime_ns: number | null;
+  btime_ns: number | null;
+  mtime_ns: number;
+  /** "delete" | "keep" | "undecided" | null (sin decisión aún). */
+  decision: string | null;
+  /** id del miembro con btime_ns más antiguo; es la sugerencia a mantener. */
+  suggested_keep_id: number;
+}
+
+/** Decisión que el usuario puede tomar sobre un fichero. */
+export type DecisionAction = "delete" | "keep" | "undecided";
+
+/** Modo del que se piden los miembros de un grupo. */
+export type GroupMode = "exact" | "perceptual" | "manual";

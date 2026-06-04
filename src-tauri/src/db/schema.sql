@@ -61,3 +61,47 @@ CREATE TABLE IF NOT EXISTS decisions (
   action     TEXT    NOT NULL,             -- 'delete' | 'keep' | 'undecided'
   decided_at TEXT    NOT NULL
 );
+
+-- ---------------------------------------------------------------------------
+-- Modo 1: cabeceras de grupo de duplicados exactos
+-- ---------------------------------------------------------------------------
+-- Una fila por (filename, ext, ctime, size) con member_count > 1.
+-- Los miembros se reconstruyen por JOIN en `get_group_members`.
+-- Ordenable por (size_bytes * (member_count - 1)) DESC para mostrar
+-- primero lo que más espacio desperdicia.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS exact_groups (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id   INTEGER NOT NULL REFERENCES scan_sessions(id) ON DELETE CASCADE,
+  filename     TEXT    NOT NULL,
+  ext          TEXT    NOT NULL,
+  ctime_ns     INTEGER NOT NULL,
+  size_bytes   INTEGER NOT NULL,
+  member_count INTEGER NOT NULL,
+  reviewed     INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_exact_groups_session ON exact_groups(session_id);
+
+-- ---------------------------------------------------------------------------
+-- Modo 2 (Fase 5-6): miembros de clusters perceptuales
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS perceptual_groups (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id      INTEGER NOT NULL REFERENCES scan_sessions(id) ON DELETE CASCADE,
+  representative  INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+  hamming_to_rep  INTEGER NOT NULL,
+  reviewed        INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_perceptual_session ON perceptual_groups(session_id);
+
+-- ---------------------------------------------------------------------------
+-- Modo 3 (Fase 7): pares a revisar manualmente
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS manual_pairs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id INTEGER NOT NULL REFERENCES scan_sessions(id) ON DELETE CASCADE,
+  file_a     INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+  file_b     INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+  reviewed   INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_manual_session ON manual_pairs(session_id);

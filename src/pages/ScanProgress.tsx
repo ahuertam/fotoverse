@@ -140,16 +140,22 @@ function ScanProgressPage() {
             </p>
           )}
           {completed?.error && <p className="error">⚠️ {completed.error}</p>}
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            disabled={completed?.status !== "completed"}
-          >
-            Volver al inicio
-          </button>
-          <p className="hint">
-            (La Fase 3 añadirá el botón "Revisar duplicados" aquí.)
-          </p>
+          <div className="done-actions">
+            <button
+              type="button"
+              className="primary"
+              onClick={() => navigate(`/review/${sessionId}/mode1`)}
+              disabled={completed?.status !== "completed"}
+            >
+              Revisar duplicados (Modo 1) →
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+            >
+              Volver al inicio
+            </button>
+          </div>
         </section>
       ) : (
         <section className="actions">

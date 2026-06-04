@@ -9,6 +9,7 @@ use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 mod cancel;
 mod commands;
 pub mod db;
+pub mod detect;
 mod error;
 mod state;
 pub mod walk;
@@ -65,6 +66,10 @@ pub fn run() {
             commands::get_scan_status,
             commands::list_sessions,
             commands::delete_session,
+            commands::get_exact_groups,
+            commands::get_group_members,
+            commands::set_decision,
+            commands::bulk_set_decision,
         ])
         .run(tauri::generate_context!())
         .expect("error fatal al ejecutar la aplicación fotoverse");

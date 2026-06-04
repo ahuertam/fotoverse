@@ -18,6 +18,7 @@ use tauri_plugin_dialog::DialogExt;
 use tracing::{info, warn};
 
 use crate::cancel::Cancel;
+use crate::detect::exact::{self, ExactGroup, ExactGroupMember};
 use crate::error::{AppError, AppResult};
 use crate::state::{AppState, ScanHandle};
 use crate::walk;
@@ -166,6 +167,15 @@ pub async fn start_scan(
                      WHERE id = ?3",
                     rusqlite::params![summary.total_files as i64, Utc::now().to_rfc3339(), session_id],
                 );
+                // Poblar los grupos de duplicados exactos (Modo 1). Si
+                // falla, lo loggeamos pero no fallamos el escaneo: el
+                // usuario podría re-invocar `populate_exact_groups`
+                // manualmente (Fase 8+).
+                if let Err(e) = exact::populate(&conn, session_id) {
+                    warn!(session_id, error = %e, "no se pudieron poblar exact_groups");
+                }
+                drop(conn);
+                info!(session_id, "Modo 1 poblado");
             }
             Err(AppError::Cancelled) => {
                 warn!(session_id, "escaneo cancelado");
@@ -298,5 +308,128 @@ pub async fn delete_session(
     _args: CancelScanArgs, // re-uso del struct por simplicidad
 ) -> AppResult<()> {
     // Implementado en Fase 9 cuando se borren los thumbs asociados.
+    Ok(())
+}
+
+// ===========================================================================
+// Modo 1 — Duplicados exactos
+// ===========================================================================
+
+// --- get_exact_groups ---------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+pub struct GetExactGroupsArgs {
+    pub session_id: i64,
+    pub offset: i64,
+    pub limit: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetExactGroupsResult {
+    pub groups: Vec<ExactGroup>,
+    pub total: i64,
+}
+
+#[tauri::command]
+pub async fn get_exact_groups(
+    state: State<'_, AppState>,
+    args: GetExactGroupsArgs,
+) -> AppResult<GetExactGroupsResult> {
+    let conn = state.db.lock().await;
+    let (groups, total) = exact::list_paginated(&conn, args.session_id, args.offset, args.limit)?;
+    Ok(GetExactGroupsResult { groups, total })
+}
+
+// --- get_group_members --------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+pub struct GetGroupMembersArgs {
+    pub group_id: i64,
+    /// "exact" | "perceptual" | "manual". Por ahora sólo "exact".
+    #[allow(dead_code)]
+    pub mode: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetGroupMembersResult {
+    pub members: Vec<ExactGroupMember>,
+}
+
+#[tauri::command]
+pub async fn get_group_members(
+    state: State<'_, AppState>,
+    args: GetGroupMembersArgs,
+) -> AppResult<GetGroupMembersResult> {
+    let conn = state.db.lock().await;
+    let members = exact::members(&conn, args.group_id)?;
+    Ok(GetGroupMembersResult { members })
+}
+
+// --- set_decision -------------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+pub struct SetDecisionArgs {
+    pub file_id: i64,
+    /// "delete" | "keep" | "undecided".
+    pub action: String,
+}
+
+fn validate_action(action: &str) -> AppResult<&str> {
+    match action {
+        "delete" | "keep" | "undecided" => Ok(action),
+        other => Err(AppError::Other(format!(
+            "acción de decisión inválida: {other} (esperaba delete|keep|undecided)"
+        ))),
+    }
+}
+
+#[tauri::command]
+pub async fn set_decision(
+    state: State<'_, AppState>,
+    args: SetDecisionArgs,
+) -> AppResult<()> {
+    let action = validate_action(&args.action)?;
+    let conn = state.db.lock().await;
+    let now = Utc::now().to_rfc3339();
+    conn.execute(
+        "INSERT INTO decisions (file_id, action, decided_at) \
+         VALUES (?1, ?2, ?3) \
+         ON CONFLICT(file_id) DO UPDATE SET action = excluded.action, decided_at = excluded.decided_at",
+        rusqlite::params![args.file_id, action, now],
+    )?;
+    Ok(())
+}
+
+// --- bulk_set_decision --------------------------------------------------
+
+#[derive(Debug, Deserialize)]
+pub struct BulkSetDecisionArgs {
+    pub file_ids: Vec<i64>,
+    pub action: String,
+}
+
+#[tauri::command]
+pub async fn bulk_set_decision(
+    state: State<'_, AppState>,
+    args: BulkSetDecisionArgs,
+) -> AppResult<()> {
+    let action = validate_action(&args.action)?;
+    if args.file_ids.is_empty() {
+        return Ok(());
+    }
+    let now = Utc::now().to_rfc3339();
+    let mut conn = state.db.lock().await;
+    let tx = conn.transaction()?;
+    {
+        let mut stmt = tx.prepare(
+            "INSERT INTO decisions (file_id, action, decided_at) \
+             VALUES (?1, ?2, ?3) \
+             ON CONFLICT(file_id) DO UPDATE SET action = excluded.action, decided_at = excluded.decided_at",
+        )?;
+        for fid in &args.file_ids {
+            stmt.execute(rusqlite::params![fid, action, now])?;
+        }
+    }
+    tx.commit()?;
     Ok(())
 }
