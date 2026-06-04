@@ -118,3 +118,143 @@ a:hover {
   padding: var(--space-5);
   text-align: center;
 }
+
+/* Botones ---------------------------------------------------------------- */
+
+button {
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  background: #232730;
+}
+
+button:active:not(:disabled) {
+  background: #181a20;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  padding: var(--space-3) var(--space-5);
+}
+
+button.primary:hover:not(:disabled) {
+  background: #3b78e8;
+}
+
+.welcome > button.primary {
+  margin-top: var(--space-4);
+}
+
+.error {
+  color: var(--color-error);
+  font-size: 0.875rem;
+  margin-top: var(--space-3);
+}
+
+/* ScanProgress ----------------------------------------------------------- */
+
+.scan-progress {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+.scan-progress header {
+  margin-bottom: var(--space-5);
+}
+
+.scan-progress h1 {
+  font-size: 1.75rem;
+  margin-bottom: var(--space-2);
+}
+
+.scan-progress .root-path {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+  word-break: break-all;
+  margin: 0;
+}
+
+.scan-progress .phase {
+  background: var(--color-bg-elevated);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+
+.scan-progress .phase h2 {
+  font-size: 1.25rem;
+  margin-bottom: var(--space-3);
+}
+
+.progress-bar {
+  height: 8px;
+  background: #2a2d36;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width 0.2s ease;
+}
+
+.scan-progress .counter {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  color: var(--color-fg);
+  margin: 0 0 var(--space-2);
+}
+
+.scan-progress .current-path {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+  word-break: break-all;
+  margin: 0;
+}
+
+.scan-progress .actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.scan-progress .done {
+  background: var(--color-bg-elevated);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.scan-progress .done h2 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-3);
+}
+
+.scan-progress .hint {
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+  margin-top: var(--space-3);
+}

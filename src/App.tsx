@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
-import Welcome from "./pages/Welcome";
 import NotFound from "./pages/NotFound";
+import ScanProgress from "./pages/ScanProgress";
+import Welcome from "./pages/Welcome";
 
 /**
  * Componente raíz. Sólo define el routing entre páginas.
@@ -10,6 +11,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Welcome />} />
+      <Route path="/scan/:id" element={<ScanProgress />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

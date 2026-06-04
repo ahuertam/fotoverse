@@ -1,22 +1,67 @@
 /**
- * Página de bienvenida (placeholder en Fase 1).
+ * Página de bienvenida.
  *
- * En la Fase 2 añadiremos:
- * - Botón "Elegir carpeta…" → invoca el comando Tauri `pick_folder`.
- * - Botón "Elegir disco…" → muestra los volúmenes del sistema.
- * - Lista de escaneos anteriores para reanudar.
+ * En Fase 2:
+ * - Botón "Elegir carpeta…" que invoca el dialog nativo.
+ * - Lanza el escaneo y navega a /scan/:id.
  *
- * Por ahora sólo muestra el título y un mensaje de estado del backend.
+ * En Fases futuras se añadirá:
+ * - Botón "Elegir disco…".
+ * - Lista de escaneos anteriores.
+ * - Ajustes (cache, archivos ocultos).
  */
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import { pickFolder, startScan } from "../lib/tauri";
+import type { ScanMode } from "../lib/types";
+
+const DEFAULT_MODES: ScanMode[] = ["exact", "perceptual", "manual"];
+
 function Welcome() {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handlePickFolder() {
+    setError(null);
+    setBusy(true);
+    try {
+      const root = await pickFolder();
+      if (!root) {
+        // Usuario canceló el dialog.
+        return;
+      }
+      const session = await startScan(root, DEFAULT_MODES);
+      navigate(`/scan/${session.id}`);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="welcome">
       <h1>fotoverse</h1>
       <p className="tagline">
         Encuentra duplicados en tu biblioteca de fotos y vídeos.
       </p>
+
+      <button
+        type="button"
+        className="primary"
+        onClick={handlePickFolder}
+        disabled={busy}
+      >
+        {busy ? "Iniciando escaneo…" : "Elegir carpeta…"}
+      </button>
+
+      {error && <p className="error">⚠️ {error}</p>}
+
       <p className="status">
-        🟢 Backend Rust inicializado. Esperando integración con la Fase 2.
+        🟢 Backend Rust inicializado. SQLite en app_data_dir().
       </p>
     </main>
   );

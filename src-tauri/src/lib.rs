@@ -2,11 +2,19 @@
 //!
 //! Ver [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) para el diseño completo.
 
+use tauri::Manager;
 use tracing::info;
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
 
-/// Comando de ejemplo que el scaffold de Tauri incluye. Se eliminará
-/// en la Fase 2 cuando se sustituyan por `pick_folder`, `start_scan`, etc.
+mod cancel;
+mod commands;
+pub mod db;
+mod error;
+mod state;
+pub mod walk;
+
+/// Comando de ejemplo del scaffold original. Se mantiene por compatibilidad
+/// con el tutorial de Tauri; los comandos reales son los de `commands::*`.
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("¡Hola, {name}! Te saluda Rust desde fotoverse.")
@@ -37,7 +45,27 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .setup(|app| {
+            // Abrir y migrar la base de datos antes de que la UI
+            // pueda hacer nada.
+            let conn = db::open(app.handle())
+                .expect("no se pudo abrir la base de datos");
+            let state = state::AppState::new(conn);
+            app.manage(state);
+            info!("base de datos lista");
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            commands::pick_folder,
+            commands::start_scan,
+            commands::cancel_scan,
+            commands::get_scan_status,
+            commands::list_sessions,
+            commands::delete_session,
+        ])
         .run(tauri::generate_context!())
         .expect("error fatal al ejecutar la aplicación fotoverse");
 }

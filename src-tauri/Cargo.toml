@@ -19,11 +19,36 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# Tauri runtime + plugins
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+
+# Serialización
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # Logging estructurado (Fase 1)
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Async runtime (viene re-exportado por Tauri, pero tokio-util lo necesitamos
+# directamente para CancellationToken)
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "macros"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+
+# Errores
+thiserror = "1"
+anyhow = "1"
+
+# Filesystem (Fase 2)
+jwalk = "0.8"
+normpath = "1"
+rayon = "1"
+
+# DB (Fase 2)
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+# Fechas
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
