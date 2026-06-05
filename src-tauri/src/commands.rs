@@ -29,7 +29,7 @@ use crate::walk;
 
 /// Abre el diálogo nativo de selección de carpeta. Devuelve `None` si el
 /// usuario cancela.
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn pick_folder(app: AppHandle) -> AppResult<Option<String>> {
     // `blocking_pick_folder` se debe invocar desde un task bloqueante
     // porque internamente espera un callback del dialog.
@@ -83,7 +83,7 @@ impl ScanSession {
 }
 
 /// Lanza un escaneo en background. Devuelve el `session_id` recién creado.
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn start_scan(
     app: AppHandle,
     state: State<'_, AppState>,
@@ -223,7 +223,7 @@ pub struct CancelScanArgs {
     pub session_id: i64,
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn cancel_scan(
     state: State<'_, AppState>,
     args: CancelScanArgs,
@@ -254,7 +254,7 @@ pub struct ScanStatus {
     pub cancel_requested: bool,
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn get_scan_status(
     state: State<'_, AppState>,
     args: GetScanStatusArgs,
@@ -284,7 +284,7 @@ pub async fn get_scan_status(
 // list_sessions (placeholder útil para Fase 2; UI lo consume en Fase 9)
 // ---------------------------------------------------------------------------
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn list_sessions(state: State<'_, AppState>) -> AppResult<Vec<ScanSession>> {
     let conn = state.db.lock().await;
     let mut stmt = conn.prepare(
@@ -301,7 +301,7 @@ pub async fn list_sessions(state: State<'_, AppState>) -> AppResult<Vec<ScanSess
 // delete_session (placeholder para Fase 9)
 // ---------------------------------------------------------------------------
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 #[allow(dead_code)]
 pub async fn delete_session(
     _state: State<'_, AppState>,
@@ -330,7 +330,7 @@ pub struct GetExactGroupsResult {
     pub total: i64,
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn get_exact_groups(
     state: State<'_, AppState>,
     args: GetExactGroupsArgs,
@@ -355,7 +355,7 @@ pub struct GetGroupMembersResult {
     pub members: Vec<ExactGroupMember>,
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn get_group_members(
     state: State<'_, AppState>,
     args: GetGroupMembersArgs,
@@ -383,7 +383,7 @@ fn validate_action(action: &str) -> AppResult<&str> {
     }
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn set_decision(
     state: State<'_, AppState>,
     args: SetDecisionArgs,
@@ -408,7 +408,7 @@ pub struct BulkSetDecisionArgs {
     pub action: String,
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn bulk_set_decision(
     state: State<'_, AppState>,
     args: BulkSetDecisionArgs,

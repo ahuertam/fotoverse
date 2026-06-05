@@ -2,14 +2,18 @@
  * Hook que se suscribe a los eventos del pipeline de escaneo para un
  * `session_id` dado.
  *
- * Comportamiento:
+ * Comportamiento (defensa en profundidad contra la race condition del
+ * walk ultra-rápido):
  * 1. Al montar, **catch-up**: consulta `getScanStatus` para detectar
- *    escaneos ya terminados (race condition: el walk puede ser más
- *    rápido que el tiempo de mount de la página, así que el evento
- *    `scan_completed` puede dispararse ANTES de que nos suscribamos).
+ *    escaneos ya terminados (el walk puede ser más rápido que el
+ *    tiempo de mount de la página, así que el evento `scan_completed`
+ *    puede dispararse ANTES de que nos suscribamos).
  * 2. Suscribe a `scan_progress` y `scan_completed`.
- * 3. Limpia los listeners al desmontar.
- * 4. Si el `sessionId` cambia, re-suscribe.
+ * 3. **Polling de respaldo** cada 500 ms: aunque el evento en vivo se
+ *    pierda (por ejemplo, una navegación rápida), el polling acabará
+ *    viendo el estado terminal y sintetizará el `ScanCompleted`.
+ * 4. Limpia listeners e interval al desmontar.
+ * 5. Si el `sessionId` cambia, re-suscribe.
  */
 
 import { useEffect, useState } from "react";
@@ -39,6 +43,12 @@ function synthesizeCompleted(s: ScanStatus): ScanCompleted {
   };
 }
 
+function isTerminal(status: string): boolean {
+  return (
+    status === "completed" || status === "cancelled" || status === "failed"
+  );
+}
+
 export function useScanProgress(sessionId: number | null): UseScanProgressResult {
   const [progress, setProgress] = useState<ScanProgress | null>(null);
   const [completed, setCompleted] = useState<ScanCompleted | null>(null);
@@ -50,26 +60,25 @@ export function useScanProgress(sessionId: number | null): UseScanProgressResult
     let cancelled = false;
     const unlistens: Array<Promise<() => void>> = [];
 
-    // 1) Catch-up: si la página se monta después de que el walk terminó,
-    //    getScanStatus nos lo dice y sintetizamos el evento.
-    void (async () => {
+    // 1) Catch-up + 3) Polling de respaldo.
+    //    Mientras `completed` sea null, sondeamos la sesión cada 500 ms.
+    //    Si encontramos estado terminal, sintetizamos el evento y paramos.
+    const pollId = window.setInterval(async () => {
+      if (cancelled) return;
       try {
         const status = await getScanStatus(sessionId);
         if (cancelled) return;
         setInitialStatus(status);
-        if (
-          status.session.status === "completed" ||
-          status.session.status === "cancelled" ||
-          status.session.status === "failed"
-        ) {
+        if (isTerminal(status.session.status)) {
           setCompleted(synthesizeCompleted(status));
         }
       } catch {
-        if (!cancelled) setInitialStatus(null);
+        // Ignoramos errores puntuales; el siguiente tick reintentará.
       }
-    })();
+    }, 500);
 
-    // 2) Suscripción a los eventos en vivo.
+    // 2) Suscripción a los eventos en vivo (vía rápida; el polling es
+    //    la red de seguridad).
     unlistens.push(
       onScanProgress((p) => {
         if (p.session_id === sessionId) setProgress(p);
@@ -83,6 +92,7 @@ export function useScanProgress(sessionId: number | null): UseScanProgressResult
 
     return () => {
       cancelled = true;
+      window.clearInterval(pollId);
       void Promise.all(unlistens).then((fns) => fns.forEach((f) => f()));
     };
   }, [sessionId]);
