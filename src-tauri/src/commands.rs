@@ -47,6 +47,7 @@ pub async fn pick_folder(app: AppHandle) -> AppResult<Option<String>> {
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StartScanArgs {
     pub root: String,
     /// Lista de modos a ejecutar. Por ahora sólo se persiste; las
@@ -219,6 +220,7 @@ pub async fn start_scan(
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CancelScanArgs {
     pub session_id: i64,
 }
@@ -244,6 +246,7 @@ pub async fn cancel_scan(
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetScanStatusArgs {
     pub session_id: i64,
 }
@@ -318,6 +321,7 @@ pub async fn delete_session(
 // --- get_exact_groups ---------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetExactGroupsArgs {
     pub session_id: i64,
     pub offset: i64,
@@ -343,6 +347,7 @@ pub async fn get_exact_groups(
 // --- get_group_members --------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetGroupMembersArgs {
     pub group_id: i64,
     /// "exact" | "perceptual" | "manual". Por ahora sólo "exact".
@@ -368,6 +373,7 @@ pub async fn get_group_members(
 // --- set_decision -------------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SetDecisionArgs {
     pub file_id: i64,
     /// "delete" | "keep" | "undecided".
@@ -403,6 +409,7 @@ pub async fn set_decision(
 // --- bulk_set_decision --------------------------------------------------
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BulkSetDecisionArgs {
     pub file_ids: Vec<i64>,
     pub action: String,
