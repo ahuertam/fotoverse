@@ -98,3 +98,32 @@ export type DecisionAction = "delete" | "keep" | "undecided";
 
 /** Modo del que se piden los miembros de un grupo. */
 export type GroupMode = "exact" | "perceptual" | "manual";
+
+// ---------------------------------------------------------------------------
+// Modo 2 — Duplicados perceptuales (Fase 5)
+// ---------------------------------------------------------------------------
+
+/** Cabecera de un grupo perceptual (espejo de `detect::perceptual::PerceptualGroup`). */
+export interface PerceptualGroup {
+  id: number;
+  sessionId: number;
+  representative: number;
+  hammingToRep: number;
+  memberCount: number;
+  reviewed: boolean;
+}
+
+/** Miembro de un grupo perceptual (espejo de `detect::perceptual::PerceptualGroupMember`). */
+export interface PerceptualGroupMember {
+  id: number;
+  path: string;
+  sizeBytes: number;
+  ctimeNs: number | null;
+  btimeNs: number | null;
+  mtimeNs: number;
+  /** "delete" | "keep" | "undecided" | null */
+  decision: string | null;
+  hammingToRep: number;
+  /** id del representante del cluster; sugerencia a mantener. */
+  suggestedKeepId: number;
+}

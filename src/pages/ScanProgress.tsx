@@ -135,6 +135,13 @@ function ScanProgressPage() {
             </button>
             <button
               type="button"
+              onClick={() => navigate(`/review/${sessionId}/mode2`)}
+              disabled={completed?.status !== "completed"}
+            >
+              Revisar duplicados perceptuales (Modo 2) →
+            </button>
+            <button
+              type="button"
               onClick={() => navigate("/")}
             >
               Volver al inicio

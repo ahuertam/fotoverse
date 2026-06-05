@@ -113,9 +113,11 @@ function Mode1Review() {
     setLoadingMembers((prev) => new Set(prev).add(group.id));
     try {
       const { members } = await getGroupMembers(group.id, "exact");
+      // Cast: el backend devuelve ExactGroupMember[] cuando
+      // mode = "exact".
       setMembersByGroup((prev) => {
         const m = new Map(prev);
-        m.set(group.id, members);
+        m.set(group.id, members as ExactGroupMember[]);
         return m;
       });
     } catch (e) {

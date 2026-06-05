@@ -13,6 +13,8 @@ import type {
   ExactGroup,
   ExactGroupMember,
   GroupMode,
+  PerceptualGroup,
+  PerceptualGroupMember,
   ScanCompleted,
   ScanError,
   ScanMode,
@@ -64,6 +66,21 @@ export async function listSessions(): Promise<ScanSession[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Fase 5 — Modo 2 (duplicados perceptuales)
+// ---------------------------------------------------------------------------
+
+export async function getPerceptualGroups(
+  sessionId: number,
+  offset: number,
+  limit: number,
+): Promise<{ groups: PerceptualGroup[]; total: number }> {
+  return invoke<{ groups: PerceptualGroup[]; total: number }>(
+    "get_perceptual_groups",
+    { args: { sessionId, offset, limit } },
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Fase 4 — Thumbnails
 // ---------------------------------------------------------------------------
 
@@ -91,10 +108,11 @@ export async function getExactGroups(
 export async function getGroupMembers(
   groupId: number,
   mode: GroupMode = "exact",
-): Promise<{ members: ExactGroupMember[] }> {
-  return invoke<{ members: ExactGroupMember[] }>("get_group_members", {
-    args: { groupId, mode },
-  });
+): Promise<{ members: ExactGroupMember[] | PerceptualGroupMember[] }> {
+  return invoke<{ members: ExactGroupMember[] | PerceptualGroupMember[] }>(
+    "get_group_members",
+    { args: { groupId, mode } },
+  );
 }
 
 /** Persiste la decisión del usuario sobre un fichero. */

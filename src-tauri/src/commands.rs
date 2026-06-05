@@ -19,7 +19,9 @@ use tracing::{info, warn};
 
 use crate::cancel::Cancel;
 use crate::detect::exact::{self, ExactGroup, ExactGroupMember};
+use crate::detect::perceptual;
 use crate::error::{AppError, AppResult};
+use crate::hash;
 use crate::state::{AppState, ScanHandle};
 use crate::thumbs;
 use crate::walk;
@@ -176,8 +178,22 @@ pub async fn start_scan(
                 if let Err(e) = exact::populate(&conn, session_id) {
                     warn!(session_id, error = %e, "no se pudieron poblar exact_groups");
                 }
-                drop(conn);
                 info!(session_id, "Modo 1 poblado");
+
+                // Fase 5: calcular pHash de las imágenes y poblar
+                // perceptual_groups. Bloquea el cierre del scan porque
+                // queremos que el usuario pueda ir a Modo 2 directamente.
+                if let Err(e) = hash::image_hash::populate_session(&conn, session_id) {
+                    warn!(session_id, error = %e, "pHash de imágenes falló");
+                } else {
+                    info!(session_id, "pHash de imágenes calculado");
+                }
+                if let Err(e) = perceptual::populate(&conn, session_id) {
+                    warn!(session_id, error = %e, "perceptual_groups falló");
+                } else {
+                    info!(session_id, "Modo 2 poblado");
+                }
+                drop(conn);
 
                 // Fase 4: generar thumbnails en background. No bloquea
                 // el cierre del scan; el frontend puede pedirlos
@@ -506,4 +522,33 @@ pub async fn get_thumbnail(
     .map_err(|e| AppError::Other(format!("join thumb task: {e}")))??;
 
     Ok(abs.to_string_lossy().to_string())
+}
+
+// ===========================================================================
+// Fase 5 — Modo 2 (duplicados perceptuales)
+// ===========================================================================
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetPerceptualGroupsArgs {
+    pub session_id: i64,
+    pub offset: i64,
+    pub limit: i64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetPerceptualGroupsResult {
+    pub groups: Vec<perceptual::PerceptualGroup>,
+    pub total: i64,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn get_perceptual_groups(
+    state: State<'_, AppState>,
+    args: GetPerceptualGroupsArgs,
+) -> AppResult<GetPerceptualGroupsResult> {
+    let conn = state.db.lock().await;
+    let (groups, total) =
+        perceptual::list_paginated(&conn, args.session_id, args.offset, args.limit)?;
+    Ok(GetPerceptualGroupsResult { groups, total })
 }

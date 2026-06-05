@@ -11,6 +11,7 @@ mod commands;
 pub mod db;
 pub mod detect;
 mod error;
+pub mod hash;
 mod state;
 pub mod thumbs;
 pub mod walk;
@@ -78,6 +79,7 @@ pub fn run() {
             commands::set_decision,
             commands::bulk_set_decision,
             commands::get_thumbnail,
+            commands::get_perceptual_groups,
         ])
         .run(tauri::generate_context!())
         .expect("error fatal al ejecutar la aplicación fotoverse");
