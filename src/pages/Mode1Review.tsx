@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 
+import { Thumbnail } from "../components/Thumbnail";
 import {
   bulkSetDecision,
   getExactGroups,
@@ -297,10 +298,13 @@ function Mode1Review() {
                               key={m.id}
                               className={`member ${isSuggested ? "suggested" : ""}`}
                             >
-                              <div
-                                className="thumb"
-                                title="Thumbnail (Fase 4)"
-                              />
+                              <div className="thumb">
+                                <Thumbnail
+                                  fileId={m.id}
+                                  title={m.path}
+                                  className="thumb-img"
+                                />
+                              </div>
                               <div className="meta">
                                 <p className="path" title={m.path}>
                                   {basename(m.path)}

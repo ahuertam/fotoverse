@@ -48,9 +48,10 @@ fn scan_trial_directory() {
     println!("  Imágenes: {}", n_img);
     println!("  Vídeos:   {}", n_vid);
 
-    // La fixture tiene 20 JPG únicos + 4 hard links (foto_1×3, foto_2×2,
-    // foto_3×2 = 7 paths JPG) → 24 JPG. + 6 PNG + 3 WEBP = 33 imágenes, 0 vídeos.
-    assert_eq!(n_img, 33, "debe descubrir 33 imágenes");
+    // La fixture (regenerada por `tests/fixture.rs`) tiene:
+    //   20 foto_N.jpg únicos + 4 hard links (foto_1×3, foto_2×2, foto_3×2 = 7 paths)
+    //   = 24 JPGs + 3 WebPs en sub2/ = 27 imágenes, 0 vídeos.
+    assert_eq!(n_img, 27, "debe descubrir 27 imágenes (20 + 4 + 3)");
     assert_eq!(n_vid, 0, "no debe haber vídeos en la fixture");
 
     // 2. Persistir en una DB temporal.

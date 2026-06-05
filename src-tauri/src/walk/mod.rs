@@ -16,7 +16,7 @@ use std::time::Instant;
 use jwalk::WalkDir;
 use rayon::prelude::*;
 use rusqlite::Connection;
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 use tracing::{info, warn};
@@ -148,6 +148,9 @@ pub struct WalkSummary {
     pub total_files: usize,
     #[allow(dead_code)]
     pub duration_ms: u64,
+    /// Metadatos de los ficheros encontrados. El caller los usa para
+    /// disparar la generación de thumbnails en background.
+    pub entries: Vec<FileMeta>,
 }
 
 /// Lanza el walk en un `spawn_blocking` (I/O bound). Devuelve cuando
@@ -169,6 +172,49 @@ pub async fn run(
         Ok(Err(e)) => Err(e),
         Err(e) => Err(AppError::Other(format!("join walk task: {e}"))),
     }
+}
+
+/// Dispara la generación de thumbnails en background. Llamado por
+/// `commands::start_scan` tras el walk, en un `tokio::spawn` separado.
+/// El frontend no espera a que termine: si un thumb se pide antes
+/// de estar generado, `get_thumbnail` lo genera on-demand.
+pub fn spawn_thumb_generation(
+    app: AppHandle,
+    session_id: i64,
+    entries: Vec<FileMeta>,
+) {
+    tokio::task::spawn_blocking(move || {
+        let cache_root = match app.path().app_cache_dir() {
+            Ok(p) => p,
+            Err(e) => {
+                warn!("no se pudo resolver app_cache_dir para thumbs: {e}");
+                return;
+            }
+        };
+        let _ = crate::thumbs::cache_dir(&cache_root); // asegurar dir
+
+        // Pool acotado: thumbs de imágenes son CPU/IO bound. Para 50k
+        // imágenes, paralelismo = 8 evita saturar el SSD.
+        let pool = rayon::ThreadPoolBuilder::new()
+            .num_threads(std::cmp::min(8, rayon::current_num_threads().max(2)))
+            .build()
+            .expect("thread pool");
+
+        info!(session_id, total = entries.len(), "generando thumbnails en background");
+        pool.install(|| {
+            use rayon::prelude::*;
+            entries.par_iter().for_each(|meta| {
+                // Best-effort: si falla (permisos, formato raro), seguimos.
+                let _ = crate::thumbs::generate_silent(
+                    std::path::Path::new(&meta.path),
+                    meta.kind,
+                    meta.mtime_ns,
+                    &cache_root,
+                );
+            });
+        });
+        info!(session_id, "generación de thumbnails finalizada");
+    });
 }
 
 fn walk_blocking(
@@ -283,7 +329,7 @@ fn walk_blocking(
         },
     )?;
 
-    Ok(WalkSummary { total_files: total, duration_ms })
+    Ok(WalkSummary { total_files: total, duration_ms, entries })
 }
 
 /// Variante "fire-and-forget" usada por smoke tests: hace el walk en

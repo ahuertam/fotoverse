@@ -52,3 +52,16 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 
 # Fechas
 chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+
+# Imágenes (Fase 4: thumbnails). `image` soporta JPG/PNG/GIF/BMP/TIFF/WebP
+# nativamente; los GIFs animados se aplanan a su primer frame.
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "gif", "bmp", "tiff", "webp"] }
+
+# Hashing y encoding hex para nombres de cache de thumbnails.
+sha2 = "0.10"
+hex = "0.4"
+
+[dev-dependencies]
+# Para los tests: regenerar la fixture (jpeg+webp) y validar que
+# los JPEGs cacheados decodifican.
+image = { version = "0.25", default-features = false, features = ["jpeg", "webp", "png"] }

@@ -12,6 +12,7 @@ pub mod db;
 pub mod detect;
 mod error;
 mod state;
+pub mod thumbs;
 pub mod walk;
 
 /// Comando de ejemplo del scaffold original. Se mantiene por compatibilidad
@@ -53,7 +54,13 @@ pub fn run() {
             // pueda hacer nada.
             let conn = db::open(app.handle())
                 .expect("no se pudo abrir la base de datos");
-            let state = state::AppState::new(conn);
+            // Raíz del cache de thumbnails (Fase 4). `app_cache_dir()`
+            // es portable (Mac: ~/Library/Caches/...; Windows: %LOCALAPPDATA%\...).
+            let cache_root = app
+                .path()
+                .app_cache_dir()
+                .expect("no se pudo resolver app_cache_dir");
+            let state = state::AppState::new(conn, cache_root);
             app.manage(state);
             info!("base de datos lista");
             Ok(())
@@ -70,6 +77,7 @@ pub fn run() {
             commands::get_group_members,
             commands::set_decision,
             commands::bulk_set_decision,
+            commands::get_thumbnail,
         ])
         .run(tauri::generate_context!())
         .expect("error fatal al ejecutar la aplicación fotoverse");

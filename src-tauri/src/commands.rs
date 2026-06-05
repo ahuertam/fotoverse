@@ -21,6 +21,7 @@ use crate::cancel::Cancel;
 use crate::detect::exact::{self, ExactGroup, ExactGroupMember};
 use crate::error::{AppError, AppResult};
 use crate::state::{AppState, ScanHandle};
+use crate::thumbs;
 use crate::walk;
 
 // ---------------------------------------------------------------------------
@@ -177,6 +178,15 @@ pub async fn start_scan(
                 }
                 drop(conn);
                 info!(session_id, "Modo 1 poblado");
+
+                // Fase 4: generar thumbnails en background. No bloquea
+                // el cierre del scan; el frontend puede pedirlos
+                // on-demand si no están listos.
+                walk::spawn_thumb_generation(
+                    app_for_task.clone(),
+                    session_id,
+                    summary.entries,
+                );
             }
             Err(AppError::Cancelled) => {
                 warn!(session_id, "escaneo cancelado");
@@ -439,4 +449,61 @@ pub async fn bulk_set_decision(
     }
     tx.commit()?;
     Ok(())
+}
+
+// ===========================================================================
+// Fase 4 — Thumbnails
+// ===========================================================================
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetThumbnailArgs {
+    pub file_id: i64,
+    /// Tamaño preferido (lado mayor). 0 → default (256). Por ahora
+    /// sólo soportamos el tamaño del cache (256); si piden otro,
+    /// devolvemos el cacheado igualmente y el frontend escala con CSS.
+    #[allow(dead_code)]
+    pub size: u32,
+}
+
+/// Devuelve la ruta absoluta al thumbnail cacheado del fichero.
+/// Si no existe (p.ej. la sesión era antigua, previa a Fase 4), lo
+/// genera ahora a partir del path en la DB.
+#[tauri::command(rename_all = "camelCase")]
+pub async fn get_thumbnail(
+    state: State<'_, AppState>,
+    args: GetThumbnailArgs,
+) -> AppResult<String> {
+    let conn = state.db.lock().await;
+    let (path_str, kind_str, mtime_ns): (String, String, i64) = conn
+        .query_row(
+            "SELECT path, kind, mtime_ns FROM files WHERE id = ?1",
+            [args.file_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .map_err(|_| AppError::Other(format!("file_id {} no existe", args.file_id)))?;
+    drop(conn);
+
+    let kind = match kind_str.as_str() {
+        "image" => walk::FileKind::Image,
+        "video" => walk::FileKind::Video,
+        other => {
+            return Err(AppError::Other(format!(
+                "kind desconocido '{other}' para file_id {}",
+                args.file_id
+            )));
+        }
+    };
+    let path = std::path::PathBuf::from(&path_str);
+
+    // `generate` es CPU/IO bound; lo movemos a un thread bloqueante
+    // para no saturar el runtime de Tauri.
+    let cache_root = state.cache_root.clone();
+    let abs = tauri::async_runtime::spawn_blocking(move || {
+        thumbs::generate(&path, kind, mtime_ns, &cache_root)
+    })
+    .await
+    .map_err(|e| AppError::Other(format!("join thumb task: {e}")))??;
+
+    Ok(abs.to_string_lossy().to_string())
 }

@@ -64,6 +64,15 @@ export async function listSessions(): Promise<ScanSession[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Fase 4 — Thumbnails
+// ---------------------------------------------------------------------------
+
+/** Devuelve la ruta absoluta al JPEG cacheado del thumbnail de un file_id. */
+export async function getThumbnail(fileId: number, size = 0): Promise<string> {
+  return invoke<string>("get_thumbnail", { args: { fileId, size } });
+}
+
+// ---------------------------------------------------------------------------
 // Modo 1 — Duplicados exactos
 // ---------------------------------------------------------------------------
 

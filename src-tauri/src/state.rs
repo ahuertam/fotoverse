@@ -1,10 +1,11 @@
 //! Estado global de la aplicación.
 //!
 //! - [`AppState`] se inyecta a cada comando Tauri vía `tauri::State`.
-//! - Contiene la conexión SQLite (compartida) y el handle del escaneo
-//!   en curso (si lo hay).
+//! - Contiene la conexión SQLite (compartida), el handle del escaneo
+//!   en curso (si lo hay) y la ruta raíz del cache de thumbnails.
 //! - Es `Send + Sync` para poderla capturar en `tokio::spawn`.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 
 use rusqlite::Connection;
@@ -31,13 +32,19 @@ pub struct AppState {
 
     /// Handle del escaneo en curso. `None` si no hay ninguno.
     pub current: Arc<Mutex<Option<ScanHandle>>>,
+
+    /// Raíz del cache de thumbnails: `<app_cache_dir>/thumbs`.
+    /// Lo pasamos a las funciones de `thumbs::*` para que no
+    /// tengan que conocer la convención de Tauri.
+    pub cache_root: PathBuf,
 }
 
 impl AppState {
-    pub fn new(db: Connection) -> Self {
+    pub fn new(db: Connection, cache_root: PathBuf) -> Self {
         Self {
             db: Arc::new(Mutex::new(db)),
             current: Arc::new(Mutex::new(None)),
+            cache_root,
         }
     }
 }
