@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS perceptual_groups (
   session_id      INTEGER NOT NULL REFERENCES scan_sessions(id) ON DELETE CASCADE,
   representative  INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
   hamming_to_rep  INTEGER NOT NULL,
+  member_count    INTEGER NOT NULL DEFAULT 0,
   reviewed        INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_perceptual_session ON perceptual_groups(session_id);

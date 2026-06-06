@@ -193,6 +193,10 @@ pub fn list_paginated(
     offset: i64,
     limit: i64,
 ) -> AppResult<(Vec<PerceptualGroup>, i64)> {
+    info!(
+        session_id, offset, limit,
+        "perceptual::list_paginado invocado"
+    );
     // Total
     let total: i64 = conn.query_row(
         "SELECT COUNT(*) FROM perceptual_groups WHERE session_id = ?1",
