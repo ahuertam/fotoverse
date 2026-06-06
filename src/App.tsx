@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import Mode1Review from "./pages/Mode1Review";
 import Mode2Review from "./pages/Mode2Review";
+import Mode3Review from "./pages/Mode3Review";
 import NotFound from "./pages/NotFound";
 import ScanProgress from "./pages/ScanProgress";
 import Welcome from "./pages/Welcome";
@@ -16,6 +17,7 @@ function App() {
       <Route path="/scan/:id" element={<ScanProgress />} />
       <Route path="/review/:id/mode1" element={<Mode1Review />} />
       <Route path="/review/:id/mode2" element={<Mode2Review />} />
+      <Route path="/review/:id/mode3" element={<Mode3Review />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

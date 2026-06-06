@@ -504,3 +504,39 @@ button.primary:hover:not(:disabled) {
   padding-top: var(--space-4);
   border-top: 1px solid #232730;
 }
+
+/* Mode3Review (side-by-side) */
+
+.side-by-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+}
+
+.side-by-side .side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.side-by-side .side-img {
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: #000;
+  margin-bottom: var(--space-2);
+}
+
+.side-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-4);
+}

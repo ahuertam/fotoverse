@@ -142,6 +142,13 @@ function ScanProgressPage() {
             </button>
             <button
               type="button"
+              onClick={() => navigate(`/review/${sessionId}/mode3`)}
+              disabled={completed?.status !== "completed"}
+            >
+              Revisar manualmente (Modo 3) →
+            </button>
+            <button
+              type="button"
               onClick={() => navigate("/")}
             >
               Volver al inicio

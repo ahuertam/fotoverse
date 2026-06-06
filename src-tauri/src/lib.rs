@@ -80,6 +80,9 @@ pub fn run() {
             commands::bulk_set_decision,
             commands::get_thumbnail,
             commands::get_perceptual_groups,
+            commands::get_manual_pairs,
+            commands::skip_manual_pair,
+            commands::get_files_meta,
         ])
         .run(tauri::generate_context!())
         .expect("error fatal al ejecutar la aplicación fotoverse");

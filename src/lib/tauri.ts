@@ -66,6 +66,45 @@ export async function listSessions(): Promise<ScanSession[]> {
 }
 
 // ---------------------------------------------------------------------------
+// Fase 7 — Modo 3 (revisión visual manual)
+// ---------------------------------------------------------------------------
+
+/** Par para revisión side-by-side. */
+export interface ManualPair {
+  id: number;
+  sessionId: number;
+  fileA: number;
+  fileB: number;
+  reviewed: boolean;
+}
+
+export async function getManualPairs(
+  sessionId: number,
+  offset: number,
+  limit: number,
+  filter: "pending" | "all" = "pending",
+): Promise<{ pairs: ManualPair[]; total: number }> {
+  return invoke<{ pairs: ManualPair[]; total: number }>(
+    "get_manual_pairs",
+    { args: { sessionId, offset, limit, filter } },
+  );
+}
+
+/** Marca un par como revisado (saltar sin decidir). */
+export async function skipManualPair(pairId: number): Promise<void> {
+  return invoke<void>("skip_manual_pair", { args: { pairId } });
+}
+
+/** Metadata de uno o varios ficheros (path, size, mtime). */
+export async function getFilesMeta(
+  fileIds: number[],
+): Promise<{ files: { id: number; path: string; sizeBytes: number; mtimeNs: number }[] }> {
+  return invoke<{
+    files: { id: number; path: string; sizeBytes: number; mtimeNs: number }[];
+  }>("get_files_meta", { args: { fileIds } });
+}
+
+// ---------------------------------------------------------------------------
 // Fase 5 — Modo 2 (duplicados perceptuales)
 // ---------------------------------------------------------------------------
 

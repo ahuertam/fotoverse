@@ -127,3 +127,16 @@ export interface PerceptualGroupMember {
   /** id del representante del cluster; sugerencia a mantener. */
   suggestedKeepId: number;
 }
+
+// ---------------------------------------------------------------------------
+// Modo 3 — Pares manuales (Fase 7)
+// ---------------------------------------------------------------------------
+
+/** Par para revisión visual (espejo de `detect::manual::ManualPair`). */
+export interface ManualPair {
+  id: number;
+  sessionId: number;
+  fileA: number;
+  fileB: number;
+  reviewed: boolean;
+}

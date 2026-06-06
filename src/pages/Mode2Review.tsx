@@ -85,10 +85,12 @@ function Mode2Review() {
 
   const totalWasted = useMemo(
     () =>
-      groups.reduce(
-        (acc, g) => acc + (g.memberCount - 1), // nº de "copias"
-          0,
-      ),
+      groups.reduce((acc, g) => {
+        const m = typeof g.memberCount === "number" && Number.isFinite(g.memberCount)
+          ? g.memberCount
+          : 0;
+        return acc + Math.max(0, m - 1);
+      }, 0),
     [groups],
   );
 
@@ -240,6 +242,10 @@ function Mode2Review() {
           Sugerencia: mantener el más antiguo (badge "Más antiguo"),
           borrar los perceptualmente similares.
         </p>
+        <p className="muted">
+          Sugerencia: mantener el más antiguo (badge "Más antiguo"),
+          borrar los perceptualmente similares.
+        </p>
       </header>
 
       <Virtuoso
@@ -269,12 +275,24 @@ function Mode2Review() {
                     Cluster perceptual
                   </strong>
                   <span className="count">
-                    {group.memberCount} archivos
+                    {(() => {
+                      const m = typeof group.memberCount === "number" && Number.isFinite(group.memberCount)
+                        ? group.memberCount
+                        : 0;
+                      return `${m} ${m === 1 ? "archivo" : "archivos"}`;
+                    })()}
                   </span>
                 </div>
                 <div className="group-wasted">
-                  {group.memberCount - 1}{" "}
-                  {group.memberCount - 1 === 1 ? "copia" : "copias"}
+                  {(() => {
+                    const m = typeof group.memberCount === "number" && Number.isFinite(group.memberCount)
+                      ? group.memberCount
+                      : 0;
+                    const copies = Math.max(0, m - 1);
+                    return copies === 0
+                      ? "0 copias"
+                      : `${copies} ${copies === 1 ? "copia" : "copias"}`;
+                  })()}
                 </div>
               </div>
 

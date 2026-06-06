@@ -9,6 +9,7 @@
 //!   la lógica vive en `walk/`, `hash/`, `detect/`, `review/`.
 
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
 
 use chrono::Utc;
@@ -19,6 +20,7 @@ use tracing::{info, warn};
 
 use crate::cancel::Cancel;
 use crate::detect::exact::{self, ExactGroup, ExactGroupMember};
+use crate::detect::manual;
 use crate::detect::perceptual;
 use crate::error::{AppError, AppResult};
 use crate::hash;
@@ -192,6 +194,13 @@ pub async fn start_scan(
                     warn!(session_id, error = %e, "perceptual_groups falló");
                 } else {
                     info!(session_id, "Modo 2 poblado");
+                }
+
+                // Fase 7: poblar `manual_pairs` (Modo 3) tras los modos 1 y 2.
+                if let Err(e) = manual::populate(&conn, session_id) {
+                    warn!(session_id, error = %e, "manual_pairs falló");
+                } else {
+                    info!(session_id, "Modo 3 poblado");
                 }
                 drop(conn);
 
@@ -551,4 +560,110 @@ pub async fn get_perceptual_groups(
     let (groups, total) =
         perceptual::list_paginated(&conn, args.session_id, args.offset, args.limit)?;
     Ok(GetPerceptualGroupsResult { groups, total })
+}
+
+// ===========================================================================
+// Fase 7 — Modo 3 (revisión visual manual)
+// ===========================================================================
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetManualPairsArgs {
+    pub session_id: i64,
+    pub offset: i64,
+    pub limit: i64,
+    /// "pending" (default) | "all"
+    pub filter: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetManualPairsResult {
+    pub pairs: Vec<manual::ManualPair>,
+    pub total: i64,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn get_manual_pairs(
+    state: State<'_, AppState>,
+    args: GetManualPairsArgs,
+) -> AppResult<GetManualPairsResult> {
+    let conn = state.db.lock().await;
+    let filter = manual::PairFilter::from_str(args.filter.as_deref().unwrap_or("pending"))
+        .unwrap_or(manual::PairFilter::Pending);
+    let (pairs, total) =
+        manual::list_paginated(&conn, args.session_id, filter, args.offset, args.limit)?;
+    Ok(GetManualPairsResult { pairs, total })
+}
+
+/// Marca un par como revisado (saltar).
+#[tauri::command(rename_all = "camelCase")]
+pub async fn skip_manual_pair(
+    state: State<'_, AppState>,
+    args: SkipManualPairArgs,
+) -> AppResult<()> {
+    let conn = state.db.lock().await;
+    manual::mark_reviewed(&conn, args.pair_id)?;
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SkipManualPairArgs {
+    pub pair_id: i64,
+}
+
+/// Metadata de un fichero (usado por Modo 3 para mostrar el par).
+#[derive(Debug, Serialize)]
+pub struct FileMetaDto {
+    pub id: i64,
+    pub path: String,
+    pub size_bytes: i64,
+    pub mtime_ns: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetFilesMetaArgs {
+    pub file_ids: Vec<i64>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct GetFilesMetaResult {
+    pub files: Vec<FileMetaDto>,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn get_files_meta(
+    state: State<'_, AppState>,
+    args: GetFilesMetaArgs,
+) -> AppResult<GetFilesMetaResult> {
+    if args.file_ids.is_empty() {
+        return Ok(GetFilesMetaResult { files: Vec::new() });
+    }
+    let conn = state.db.lock().await;
+    // Construir placeholders para IN clause.
+    let placeholders = std::iter::repeat("?")
+        .take(args.file_ids.len())
+        .collect::<Vec<_>>()
+        .join(",");
+    let sql = format!(
+        "SELECT id, path, size_bytes, mtime_ns FROM files WHERE id IN ({placeholders})"
+    );
+    let mut stmt = conn.prepare(&sql)?;
+    let params: Vec<&dyn rusqlite::ToSql> = args
+        .file_ids
+        .iter()
+        .map(|i| i as &dyn rusqlite::ToSql)
+        .collect();
+    let rows = stmt
+        .query_map(params.as_slice(), |r| {
+            Ok(FileMetaDto {
+                id: r.get(0)?,
+                path: r.get(1)?,
+                size_bytes: r.get(2)?,
+                mtime_ns: r.get(3)?,
+            })
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(GetFilesMetaResult { files: rows })
 }
