@@ -25,6 +25,7 @@ use crate::error::AppResult;
 
 /// Cabecera de un par (espejo del struct TS).
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ManualPair {
     pub id: i64,
     pub session_id: i64,

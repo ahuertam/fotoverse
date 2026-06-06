@@ -26,6 +26,7 @@ use crate::hash::image_hash::{hamming_distance, HAMMING_THRESHOLD, HASH_BYTES};
 
 /// Cabecera de un grupo perceptual (espejo del struct TS).
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PerceptualGroup {
     pub id: i64,
     pub session_id: i64,
@@ -39,6 +40,7 @@ pub struct PerceptualGroup {
 /// representante, y la distancia Hamming al representante para el
 /// resto. `suggested_keep_id` siempre es el representante.
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PerceptualGroupMember {
     pub id: i64,
     pub path: String,

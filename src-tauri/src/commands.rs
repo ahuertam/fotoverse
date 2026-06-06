@@ -62,6 +62,7 @@ pub struct StartScanArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScanSession {
     pub id: i64,
     pub root_path: String,
@@ -287,6 +288,7 @@ pub struct GetScanStatusArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ScanStatus {
     pub session: ScanSession,
     pub cancel_requested: bool,
@@ -364,6 +366,7 @@ pub struct GetExactGroupsArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetExactGroupsResult {
     pub groups: Vec<ExactGroup>,
     pub total: i64,
@@ -391,6 +394,7 @@ pub struct GetGroupMembersArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetGroupMembersResult {
     pub members: Vec<ExactGroupMember>,
 }
@@ -546,6 +550,7 @@ pub struct GetPerceptualGroupsArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetPerceptualGroupsResult {
     pub groups: Vec<perceptual::PerceptualGroup>,
     pub total: i64,
@@ -577,6 +582,7 @@ pub struct GetManualPairsArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetManualPairsResult {
     pub pairs: Vec<manual::ManualPair>,
     pub total: i64,
@@ -614,6 +620,7 @@ pub struct SkipManualPairArgs {
 
 /// Metadata de un fichero (usado por Modo 3 para mostrar el par).
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct FileMetaDto {
     pub id: i64,
     pub path: String,
@@ -628,6 +635,7 @@ pub struct GetFilesMetaArgs {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GetFilesMetaResult {
     pub files: Vec<FileMetaDto>,
 }

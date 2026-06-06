@@ -18,6 +18,7 @@ use crate::error::AppResult;
 
 /// Cabecera de un grupo de duplicados exactos (espejo TS: `ExactGroup`).
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExactGroup {
     pub id: i64,
     pub session_id: i64,
@@ -31,6 +32,7 @@ pub struct ExactGroup {
 
 /// Miembro de un grupo (espejo TS: `ExactGroupMember`).
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExactGroupMember {
     pub id: i64,            // files.id
     pub path: String,
