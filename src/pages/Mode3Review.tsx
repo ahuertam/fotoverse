@@ -119,9 +119,15 @@ function Mode3Review() {
     [sessionId],
   );
 
+  // Carga inicial: sólo al mount, NO cada vez que loadNext cambia
+  // (eso causaría un bucle infinito porque loadNext se re-crea
+  // cuando cambian los states que toca). Usamos sessionId como
+  // dependencia única.
   useEffect(() => {
+    if (sessionId == null) return;
     void loadNext(0);
-  }, [loadNext]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
 
   async function decideAndAdvance(
     decision: "delete-a" | "delete-b" | "delete-both" | "keep-both" | "skip",
