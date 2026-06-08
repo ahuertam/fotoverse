@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { Splash } from "../components/Splash";
 import { pickFolder, startScan } from "../lib/tauri";
 import type { ScanMode } from "../lib/types";
 
@@ -21,6 +22,7 @@ const DEFAULT_MODES: ScanMode[] = ["exact", "perceptual", "manual"];
 
 function Welcome() {
   const navigate = useNavigate();
+  const [splashDone, setSplashDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,27 +45,30 @@ function Welcome() {
   }
 
   return (
-    <main className="welcome">
-      <h1>fotoverse</h1>
-      <p className="tagline">
-        Encuentra duplicados en tu biblioteca de fotos y vídeos.
-      </p>
+    <>
+      {!splashDone && <Splash onDone={() => setSplashDone(true)} />}
+      <main className="welcome" style={{ opacity: splashDone ? 1 : 0, transition: "opacity 400ms ease-in-out" }}>
+        <h1>fotoverse</h1>
+        <p className="tagline">
+          Encuentra duplicados en tu biblioteca de fotos y vídeos.
+        </p>
 
-      <button
-        type="button"
-        className="primary"
-        onClick={handlePickFolder}
-        disabled={busy}
-      >
-        {busy ? "Iniciando escaneo…" : "Elegir carpeta…"}
-      </button>
+        <button
+          type="button"
+          className="primary"
+          onClick={handlePickFolder}
+          disabled={busy}
+        >
+          {busy ? "Iniciando escaneo…" : "Elegir carpeta…"}
+        </button>
 
-      {error && <p className="error">⚠️ {error}</p>}
+        {error && <p className="error">⚠️ {error}</p>}
 
-      <p className="status">
-        🟢 Backend Rust inicializado. SQLite en app_data_dir().
-      </p>
-    </main>
+        <p className="status">
+          🟢 Backend Rust inicializado. SQLite en app_data_dir().
+        </p>
+      </main>
+    </>
   );
 }
 
