@@ -72,6 +72,7 @@ function Mode3Review() {
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState<CurrentPair | null>(null);
   const [done, setDone] = useState(false);
+  const [exited, setExited] = useState(false);
 
   // Carga inicial: primer par pendiente.
   const loadNext = useCallback(
@@ -175,11 +176,24 @@ function Mode3Review() {
       } else if (e.key.toLowerCase() === "a") {
         e.preventDefault();
         void decideAndAdvance("delete-both");
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        exitReview();
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [current]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Salir del modo 3 sin terminarlo. Detiene el avance automático
+   * (no carga el siguiente par) y muestra un mensaje de despedida.
+   * El usuario puede volver al inicio desde ahí.
+   */
+  function exitReview() {
+    setExited(true);
+    setCurrent(null);
+  }
 
   if (sessionId == null) {
     return (
@@ -211,6 +225,38 @@ function Mode3Review() {
     );
   }
 
+  if (exited) {
+    return (
+      <main className="mode1-review">
+        <header>
+          <h1>Revisión visual</h1>
+          <p className="muted">
+            ⏸ Saliste de la revisión. Los pares que ya decidiste se
+            han guardado; los que saltaste o no viste se quedarán
+            pendientes para la próxima vez.
+          </p>
+          <p className="muted small">
+            {total} {total === 1 ? "par restante" : "pares restantes"} por revisar.
+          </p>
+        </header>
+        <button type="button" onClick={() => navigate("/")}>
+          Volver al inicio
+        </button>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => {
+            setExited(false);
+            void loadNext(0);
+          }}
+          style={{ marginLeft: "0.5rem" }}
+        >
+          Reanudar revisión
+        </button>
+      </main>
+    );
+  }
+
   if (done || !current) {
     return (
       <main className="mode1-review">
@@ -237,7 +283,7 @@ function Mode3Review() {
         </p>
         <p className="muted small">
           ← Borrar izda · → Borrar dcha · A Borrar ambas · ↓ Saltar ·
-          Espacio Mantener ambas
+          Espacio Mantener ambas · Esc Salir
         </p>
       </header>
 
@@ -292,7 +338,20 @@ function Mode3Review() {
         <button type="button" onClick={() => void decideAndAdvance("skip")}>
           ↓ Saltar
         </button>
+        <button
+          type="button"
+          onClick={exitReview}
+          title="Atajo: Esc"
+          style={{ marginLeft: "auto" }}
+        >
+          ⏸ Salir (Esc)
+        </button>
       </section>
+
+      <p className="muted small" style={{ textAlign: "center", marginTop: "0.5rem" }}>
+        Esc para salir sin terminar · El par actual NO se marca como
+        revisado (lo verás la próxima vez que entres).
+      </p>
     </main>
   );
 }
