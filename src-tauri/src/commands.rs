@@ -731,7 +731,19 @@ pub async fn execute_deletions(
     state: State<'_, AppState>,
     args: ExecuteDeletionsArgs,
 ) -> AppResult<ExecuteDeletionsResult> {
+    info!(
+        session_id = args.session_id,
+        n_files = args.file_ids.len(),
+        "execute_deletions invocado"
+    );
     let conn = state.db.lock().await;
     let report = review::papelera::execute(&conn, &args.file_ids)?;
+    info!(
+        session_id = args.session_id,
+        deleted = report.deleted,
+        failed = report.failed,
+        bytes_freed = report.bytes_freed,
+        "execute_deletions completado"
+    );
     Ok(ExecuteDeletionsResult { report })
 }
