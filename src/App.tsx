@@ -1,4 +1,6 @@
 import { Route, Routes } from "react-router-dom";
+import Done from "./pages/Done";
+import FinalReview from "./pages/FinalReview";
 import Mode1Review from "./pages/Mode1Review";
 import Mode2Review from "./pages/Mode2Review";
 import Mode3Review from "./pages/Mode3Review";
@@ -18,6 +20,8 @@ function App() {
       <Route path="/review/:id/mode1" element={<Mode1Review />} />
       <Route path="/review/:id/mode2" element={<Mode2Review />} />
       <Route path="/review/:id/mode3" element={<Mode3Review />} />
+      <Route path="/review/:id/final" element={<FinalReview />} />
+      <Route path="/done/:id" element={<Done />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

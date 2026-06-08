@@ -140,3 +140,26 @@ export interface ManualPair {
   fileB: number;
   reviewed: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Modo Final + papelera (Fase 8)
+// ---------------------------------------------------------------------------
+
+/** Fichero en la final review (espejo de `review::final_review::FinalReviewItem`). */
+export interface FinalReviewItem {
+  fileId: number;
+  path: string;
+  filename: string;
+  sizeBytes: number;
+  mtimeNs: number;
+  decidedIn: string;
+}
+
+/** Reporte de ejecución de borrado (espejo de `review::papelera::DeletionReport`). */
+export interface DeletionReport {
+  deleted: number;
+  failed: number;
+  /** Tupla [path, error]. */
+  failures: [string, string][];
+  bytesFreed: number;
+}

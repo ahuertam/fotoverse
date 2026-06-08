@@ -24,6 +24,7 @@ use crate::detect::manual;
 use crate::detect::perceptual;
 use crate::error::{AppError, AppResult};
 use crate::hash;
+use crate::review;
 use crate::state::{AppState, ScanHandle};
 use crate::thumbs;
 use crate::walk;
@@ -674,4 +675,63 @@ pub async fn get_files_meta(
         })?
         .collect::<rusqlite::Result<Vec<_>>>()?;
     Ok(GetFilesMetaResult { files: rows })
+}
+
+// ===========================================================================
+// Fase 8 — Final review + papelera
+// ===========================================================================
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetFinalReviewArgs {
+    pub session_id: i64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetFinalReviewResult {
+    pub items: Vec<review::final_review::FinalReviewItem>,
+    pub count: i64,
+    pub total_bytes: i64,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn get_final_review(
+    state: State<'_, AppState>,
+    args: GetFinalReviewArgs,
+) -> AppResult<GetFinalReviewResult> {
+    let conn = state.db.lock().await;
+    let items = review::final_review::list(&conn, args.session_id)?;
+    let count = review::final_review::count(&conn, args.session_id)?;
+    let total_bytes = review::final_review::total_bytes(&conn, args.session_id)?;
+    Ok(GetFinalReviewResult {
+        items,
+        count,
+        total_bytes,
+    })
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExecuteDeletionsArgs {
+    pub session_id: i64,
+    /// IDs de los ficheros a borrar (los que el usuario NO
+    /// desmarcó en la final review).
+    pub file_ids: Vec<i64>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExecuteDeletionsResult {
+    pub report: review::papelera::DeletionReport,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn execute_deletions(
+    state: State<'_, AppState>,
+    args: ExecuteDeletionsArgs,
+) -> AppResult<ExecuteDeletionsResult> {
+    let conn = state.db.lock().await;
+    let report = review::papelera::execute(&conn, &args.file_ids)?;
+    Ok(ExecuteDeletionsResult { report })
 }

@@ -120,6 +120,51 @@ export async function getPerceptualGroups(
 }
 
 // ---------------------------------------------------------------------------
+// Fase 8 — Final review + papelera
+// ---------------------------------------------------------------------------
+
+/** Fichero en la final review. */
+export interface FinalReviewItem {
+  fileId: number;
+  path: string;
+  filename: string;
+  sizeBytes: number;
+  mtimeNs: number;
+  decidedIn: string;
+}
+
+export interface GetFinalReviewResult {
+  items: FinalReviewItem[];
+  count: number;
+  totalBytes: number;
+}
+
+export async function getFinalReview(
+  sessionId: number,
+): Promise<GetFinalReviewResult> {
+  return invoke<GetFinalReviewResult>("get_final_review", {
+    args: { sessionId },
+  });
+}
+
+/** Reporte de ejecución de borrado a la papelera. */
+export interface DeletionReport {
+  deleted: number;
+  failed: number;
+  failures: [string, string][]; // [path, error]
+  bytesFreed: number;
+}
+
+export async function executeDeletions(
+  sessionId: number,
+  fileIds: number[],
+): Promise<{ report: DeletionReport }> {
+  return invoke<{ report: DeletionReport }>("execute_deletions", {
+    args: { sessionId, fileIds },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Fase 4 — Thumbnails
 // ---------------------------------------------------------------------------
 

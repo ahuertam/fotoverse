@@ -61,6 +61,12 @@ image = { version = "0.25", default-features = false, features = ["jpeg", "png",
 sha2 = "0.10"
 hex = "0.4"
 
+# Fase 8: enviar ficheros a la papelera del SO (cross-platform).
+# `trash` es la opción más portable: en macOS usa Finder, en Windows
+# Recycle Bin, en Linux `gio trash` o `trash-cli`. Nunca borra
+# permanentemente.
+trash = "5"
+
 # Fase 5: pHash perceptual para Modo 2. Implementación propia
 # (DCT 2D inline). Razón: `img_hash 0.5` requiere nightly features
 # (`#![feature(hash)]`, `push_all`) y no compila con Rust 1.96;

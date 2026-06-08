@@ -352,6 +352,15 @@ function Mode3Review() {
         Esc para salir sin terminar · El par actual NO se marca como
         revisado (lo verás la próxima vez que entres).
       </p>
+
+      <footer className="mode1-footer" style={{ marginTop: "1.5rem" }}>
+        <button
+          type="button"
+          onClick={() => navigate(`/review/${sessionId}/final`)}
+        >
+          🗑️ Ir a Revisión final y papelera →
+        </button>
+      </footer>
     </main>
   );
 }
