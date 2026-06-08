@@ -36,11 +36,9 @@ function ScanProgressPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const sessionId = id != null ? Number(id) : null;
-  console.log("[ScanProgress] render, sessionId=", sessionId);
 
   const [cancelling, setCancelling] = useState(false);
   const { progress, completed, initialStatus } = useScanProgress(sessionId);
-  console.log("[ScanProgress] state:", { progress, completed, initialStatus: initialStatus?.session?.status });
 
   const session = initialStatus?.session ?? null;
 

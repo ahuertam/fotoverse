@@ -7,13 +7,29 @@ import "./styles/global.css";
 // TEMP: StrictMode desactivado para diagnosticar el race del scan.
 //      Lo reactivaremos en Fase 9 (polish).
 
-// TEMP: espejo de console en pantalla.
+// TEMP: espejo de console en pantalla — colapsable, no tapa la UI.
+const consoleHeader = document.createElement("div");
+consoleHeader.id = "console-mirror-header";
+consoleHeader.style.cssText =
+  "position:fixed;bottom:0;left:0;right:0;height:22px;line-height:22px;" +
+  "background:#000;color:#0f0;font:11px monospace;padding:0 8px;z-index:99999;" +
+  "border-top:1px solid #333;cursor:pointer;user-select:none;";
+consoleHeader.textContent = "▶ consola (click para abrir)";
 const consoleBox = document.createElement("div");
 consoleBox.id = "console-mirror";
 consoleBox.style.cssText =
-  "position:fixed;bottom:0;left:0;right:0;max-height:200px;overflow:auto;" +
-  "background:#000;color:#0f0;font:11px monospace;padding:4px;z-index:99999;" +
-  "border-top:1px solid #333;white-space:pre-wrap;";
+  "position:fixed;bottom:22px;left:0;right:0;max-height:33vh;overflow:auto;" +
+  "display:none;background:#000;color:#0f0;font:11px monospace;padding:4px 8px;" +
+  "z-index:99999;border-top:1px solid #333;white-space:pre-wrap;";
+let consoleOpen = false;
+consoleHeader.addEventListener("click", () => {
+  consoleOpen = !consoleOpen;
+  consoleBox.style.display = consoleOpen ? "block" : "none";
+  consoleHeader.textContent = consoleOpen
+    ? "▼ consola (click para cerrar)"
+    : "▶ consola (click para abrir)";
+});
+document.body.appendChild(consoleHeader);
 document.body.appendChild(consoleBox);
 function mirror(level: string, args: unknown[]) {
   try {
@@ -22,7 +38,7 @@ function mirror(level: string, args: unknown[]) {
       `[${level}] ` +
       args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ");
     consoleBox.appendChild(line);
-    while (consoleBox.children.length > 50) consoleBox.removeChild(consoleBox.firstChild!);
+    while (consoleBox.children.length > 80) consoleBox.removeChild(consoleBox.firstChild!);
     consoleBox.scrollTop = consoleBox.scrollHeight;
   } catch {}
 }
@@ -32,7 +48,7 @@ const origWarn = console.warn.bind(console);
 console.log = (...a) => { origLog(...a); mirror("log", a); };
 console.error = (...a) => { origErr(...a); mirror("err", a); };
 console.warn = (...a) => { origWarn(...a); mirror("warn", a); };
-origLog("[boot] console mirror activo");
+origLog("[boot] console mirror activo (click en la barra negra para abrir)");
 
 // TEMP: error boundary global para mostrar el error en pantalla en
 //       lugar de sólo en consola (que el usuario no ve).
