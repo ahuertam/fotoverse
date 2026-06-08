@@ -163,3 +163,34 @@ export interface DeletionReport {
   failures: [string, string][];
   bytesFreed: number;
 }
+
+// ---------------------------------------------------------------------------
+// Bonus v0.2 — Modo Vídeo y Peso
+// ---------------------------------------------------------------------------
+
+/** Cabecera de un vídeo en el top-N más pesados. */
+export interface HeavyVideo {
+  id: number;
+  path: string;
+  filename: string;
+  sizeBytes: number;
+  mtimeNs: number;
+  estimatedSavings: number;
+}
+
+export interface VideoAndHeavyResult {
+  duplicates: Array<{
+    id: number;
+    sessionId: number;
+    filename: string;
+    ext: string;
+    ctimeNs: number;
+    sizeBytes: number;
+    memberCount: number;
+    reviewed: boolean;
+  }>;
+  heavy: HeavyVideo[];
+  totalDuplicateBytes: number;
+  totalPotentialSavings: number;
+  compressionFactor: number;
+}

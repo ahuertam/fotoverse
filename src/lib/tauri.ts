@@ -21,6 +21,7 @@ import type {
   ScanProgress,
   ScanSession,
   ScanStatus,
+  VideoAndHeavyResult,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -161,6 +162,19 @@ export async function executeDeletions(
 ): Promise<{ report: DeletionReport }> {
   return invoke<{ report: DeletionReport }>("execute_deletions", {
     args: { sessionId, fileIds },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Bonus v0.2 — Modo Vídeo y Peso
+// ---------------------------------------------------------------------------
+
+export async function getVideoAndHeavy(
+  sessionId: number,
+  topN = 20,
+): Promise<VideoAndHeavyResult> {
+  return invoke<VideoAndHeavyResult>("get_video_and_heavy", {
+    args: { sessionId, topN },
   });
 }
 

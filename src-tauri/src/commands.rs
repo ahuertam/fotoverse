@@ -747,3 +747,26 @@ pub async fn execute_deletions(
     );
     Ok(ExecuteDeletionsResult { report })
 }
+
+// ===========================================================================
+// Bonus v0.2 — Modo Vídeo y Peso
+// ===========================================================================
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetVideoAndHeavyArgs {
+    pub session_id: i64,
+    /// Nº de vídeos en la sección "Top-N más pesados" (default 20).
+    pub top_n: Option<i64>,
+}
+
+#[tauri::command(rename_all = "camelCase")]
+pub async fn get_video_and_heavy(
+    state: State<'_, AppState>,
+    args: GetVideoAndHeavyArgs,
+) -> AppResult<review::video_heavy::VideoAndHeavyResult> {
+    let conn = state.db.lock().await;
+    let top_n = args.top_n.unwrap_or(20).max(1);
+    let result = review::video_heavy::run(&conn, args.session_id, top_n)?;
+    Ok(result)
+}

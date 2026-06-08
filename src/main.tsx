@@ -40,7 +40,9 @@ function mirror(level: string, args: unknown[]) {
     consoleBox.appendChild(line);
     while (consoleBox.children.length > 80) consoleBox.removeChild(consoleBox.firstChild!);
     consoleBox.scrollTop = consoleBox.scrollHeight;
-  } catch {}
+  } catch {
+    // ignore
+  }
 }
 const origLog = console.log.bind(console);
 const origErr = console.error.bind(console);

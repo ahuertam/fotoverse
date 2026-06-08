@@ -149,6 +149,13 @@ function ScanProgressPage() {
             </button>
             <button
               type="button"
+              onClick={() => navigate(`/review/${sessionId}/mode4`)}
+              disabled={completed?.status !== "completed"}
+            >
+              Vídeos y peso (Modo 4) →
+            </button>
+            <button
+              type="button"
               onClick={() => navigate("/")}
             >
               Volver al inicio
