@@ -36,9 +36,11 @@ function ScanProgressPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const sessionId = id != null ? Number(id) : null;
+  console.log("[ScanProgress] render, sessionId=", sessionId);
 
   const [cancelling, setCancelling] = useState(false);
   const { progress, completed, initialStatus } = useScanProgress(sessionId);
+  console.log("[ScanProgress] state:", { progress, completed, initialStatus: initialStatus?.session?.status });
 
   const session = initialStatus?.session ?? null;
 
@@ -119,8 +121,8 @@ function ScanProgressPage() {
           </h2>
           {completed && (
             <p>
-              {completed.total_files.toLocaleString("es-ES")} archivos
-              encontrados en {(completed.duration_ms / 1000).toFixed(1)} s
+              {(completed.total_files ?? 0).toLocaleString("es-ES")} archivos
+              encontrados en {((completed.duration_ms ?? 0) / 1000).toFixed(1)} s
             </p>
           )}
           {completed?.error && <p className="error">⚠️ {completed.error}</p>}

@@ -32,9 +32,16 @@ function synthesizeCompleted(s: ScanStatus): ScanCompleted {
   // Narrowing: s.session.status es uno de los tres terminales
   // (lo garantiza la guard del caller). El cast es seguro.
   const status = s.session.status as "completed" | "cancelled" | "failed";
+  // El backend serializa con rename_all = "camelCase", así que las
+  // propiedades vienen en camelCase (`totalFiles`, etc.) aunque
+  // en TS las seguimos declarando en snake_case por consistencia
+  // histórica. Las leemos de ambas formas como fallback.
+  const session = (s as any).session ?? {};
+  const totalFiles = session.totalFiles ?? session.total_files ?? 0;
+  const sessionId = session.id ?? (s as any).session_id ?? 0;
   return {
-    session_id: s.session.id,
-    total_files: s.session.total_files,
+    session_id: sessionId,
+    total_files: totalFiles,
     // No tenemos duration_ms exacto en la DB; el caller puede
     // mostrar el total_files como dato principal.
     duration_ms: 0,
