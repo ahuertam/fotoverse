@@ -123,6 +123,32 @@ function Settings() {
         )}
       </section>
 
+      <section
+        className="status"
+        style={{
+          textAlign: "left",
+          maxWidth: "32rem",
+          marginTop: "1.5rem",
+          border: "1px dashed #555",
+        }}
+      >
+        <p
+          className="muted small"
+          style={{ margin: 0, fontFamily: "var(--font-mono)" }}
+        >
+          🕳 Easter egg slot
+        </p>
+        <p
+          className="muted small"
+          style={{ marginTop: "0.5rem" }}
+        >
+          ¿Quieres que tu splash muestre una imagen random en
+          lugar del logo? Renombra tu imagen a{" "}
+          <code>src/assets/easter-egg.{`{jpg,png,webp}`}</code> y
+          aparecerá aquí (siguiente release, v0.2).
+        </p>
+      </section>
+
       <button
         type="button"
         onClick={() => navigate("/")}

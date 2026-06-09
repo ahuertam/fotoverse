@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from "react";
 
-import splashUrl from "../assets/logo.jpeg";
+import splashUrl from "../assets/fotologo.png";
 
 export interface SplashProps {
   onDone?: () => void;

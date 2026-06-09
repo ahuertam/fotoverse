@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Splash } from "../components/Splash";
-import logoUrl from "../assets/logo.jpeg";
+import logoUrl from "../assets/fotologo.png";
 import { pickFolder, setSetting, startScan } from "../lib/tauri";
 import type { ScanMode } from "../lib/types";
 
