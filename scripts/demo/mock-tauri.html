@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+  Wrapper que mockea __TAURI_INTERNALS__ para que la app
+  fotoverse funcione en un navegador normal (sin bin de Rust).
+  Útil para generar screenshots para el README sin arrancar
+  Tauri.
+
+  NO usar en producción. Sólo para preview estática.
+
+  Uso:
+    - Sirve dist/ + este index-mock.html en localhost.
+    - Captura screenshots con Playwright/Puppeteer.
+-->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fotoverse — demo (mock)</title>
+    <script>
+      // Mock del invoke de Tauri. Devuelve datos sintéticos
+      // que simulan una sesión real.
+      window.__TAURI_INTERNALS__ = {
+        invoke: async (cmd, args) => {
+          console.log("[mock invoke]", cmd, args);
+          const a = args?.args ?? {};
+          switch (cmd) {
+            case "pick_folder":
+              return "/Users/demo/Pictures";
+            case "start_scan": {
+              return {
+                id: 42,
+                rootPath: a.root,
+                modes: "[\"exact\",\"perceptual\",\"manual\"]",
+                status: "running",
+                totalFiles: 0,
+                hashedFiles: 0,
+                startedAt: "2026-06-09T10:00:00Z",
+                finishedAt: null,
+              };
+            }
+            case "get_scan_status":
+              return {
+                session: {
+                  id: a.sessionId,
+                  rootPath: "/Users/demo/Pictures",
+                  modes: "[\"exact\",\"perceptual\",\"manual\"]",
+                  status: "completed",
+                  totalFiles: 27,
+                  hashedFiles: 27,
+                  startedAt: "2026-06-09T10:00:00Z",
+                  finishedAt: "2026-06-09T10:00:18Z",
+                },
+                cancelRequested: false,
+              };
+            case "get_exact_groups":
+              return {
+                groups: [
+                  {
+                    id: 1,
+                    sessionId: a.sessionId,
+                    filename: "foto_1.jpg",
+                    ext: "jpg",
+                    ctimeNs: 1700000000000000000,
+                    sizeBytes: 132096,
+                    memberCount: 3,
+                    reviewed: false,
+                  },
+                  {
+                    id: 2,
+                    sessionId: a.sessionId,
+                    filename: "foto_2.jpg",
+                    ext: "jpg",
+                    ctimeNs: 1700000000000000000,
+                    sizeBytes: 65536,
+                    memberCount: 2,
+                    reviewed: false,
+                  },
+                  {
+                    id: 3,
+                    sessionId: a.sessionId,
+                    filename: "foto_3.jpg",
+                    ext: "jpg",
+                    ctimeNs: 1700000000000000000,
+                    sizeBytes: 27648,
+                    memberCount: 2,
+                    reviewed: false,
+                  },
+                ],
+                total: 3,
+              };
+            case "get_perceptual_groups":
+              return {
+                groups: [
+                  { id: 1, sessionId: a.sessionId, representative: 5, hammingToRep: 0, memberCount: 3, reviewed: false },
+                  { id: 2, sessionId: a.sessionId, representative: 8, hammingToRep: 0, memberCount: 3, reviewed: false },
+                  { id: 3, sessionId: a.sessionId, representative: 12, hammingToRep: 0, memberCount: 2, reviewed: false },
+                  { id: 4, sessionId: a.sessionId, representative: 17, hammingToRep: 0, memberCount: 2, reviewed: false },
+                ],
+                total: 4,
+              };
+            case "get_group_members":
+              return { members: [] };
+            case "get_thumbnail":
+              return "/tmp/thumb.jpg";
+            case "get_video_and_heavy":
+              return {
+                duplicates: [],
+                heavy: [],
+                totalDuplicateBytes: 0,
+                totalPotentialSavings: 0,
+                compressionFactor: 0.30,
+              };
+            case "get_final_review":
+              return { items: [], count: 0, totalBytes: 0 };
+            case "check_db_integrity":
+              return { ok: true, details: "ok" };
+            case "db_size":
+              return 0;
+            case "get_settings":
+              return { includeHidden: true, lastFolder: null, theme: "dark" };
+            case "set_setting":
+              return null;
+            default:
+              console.warn("[mock] comando no mockeado:", cmd);
+              return null;
+          }
+        },
+        transformCallback: (cb) => cb,
+        // Listen devuelve un UnlistenFn (no-op en mock).
+        listen: async () => () => {},
+      };
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/assets/index-CMCt2Lz5.js"></script>
+  </body>
+</html>
