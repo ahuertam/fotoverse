@@ -28,17 +28,23 @@ export interface UseScanProgressResult {
   initialStatus: ScanStatus | null;
 }
 
+// Tipo "dual" para tolerar la transición snake/camel del
+// backend. El backend serializa con rename_all = "camelCase"
+// desde el commit df5ccaa; las interfaces de TS mantienen
+// nombres snake_case por consistencia con Rust. Por eso leemos
+// de ambas keys.
+type SessionWithCamel = ScanStatus["session"] & {
+  totalFiles?: number;
+  id?: number;
+};
+
 function synthesizeCompleted(s: ScanStatus): ScanCompleted {
   // Narrowing: s.session.status es uno de los tres terminales
   // (lo garantiza la guard del caller). El cast es seguro.
   const status = s.session.status as "completed" | "cancelled" | "failed";
-  // El backend serializa con rename_all = "camelCase", así que las
-  // propiedades vienen en camelCase (`totalFiles`, etc.) aunque
-  // en TS las seguimos declarando en snake_case por consistencia
-  // histórica. Las leemos de ambas formas como fallback.
-  const session = (s as any).session ?? {};
+  const session = (s.session ?? {}) as SessionWithCamel;
   const totalFiles = session.totalFiles ?? session.total_files ?? 0;
-  const sessionId = session.id ?? (s as any).session_id ?? 0;
+  const sessionId = session.id ?? 0;
   return {
     session_id: sessionId,
     total_files: totalFiles,
