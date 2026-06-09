@@ -92,10 +92,16 @@ function Mode1Review() {
 
   const totalWasted = useMemo(
     () =>
-      groups.reduce(
-        (acc, g) => acc + g.size_bytes * (g.member_count - 1),
-        0,
-      ),
+      groups.reduce((acc, g) => {
+        // El backend serializa con rename_all = "camelCase",
+        // así que las propiedades llegan en camelCase. Leemos
+        // ambas keys como fallback (legacy + nuevo formato).
+        const size = (g as any).sizeBytes ?? g.size_bytes ?? 0;
+        const count = (g as any).memberCount ?? g.member_count ?? 0;
+        const m = Number.isFinite(size) && Number.isFinite(count) ? size : 0;
+        const c = Number.isFinite(size) && Number.isFinite(count) ? count : 0;
+        return acc + Math.max(0, m * Math.max(0, c - 1));
+      }, 0),
     [groups],
   );
 
@@ -271,7 +277,14 @@ function Mode1Review() {
           const isExpanded = expanded.has(group.id);
           const isLoadingMembers = loadingMembers.has(group.id);
           const members = membersByGroup.get(group.id);
-          const wasted = group.size_bytes * (group.member_count - 1);
+          // Mismo fallback snake/camel que en totalWasted.
+          const gSize = (group as any).sizeBytes ?? group.size_bytes ?? 0;
+          const gCount = (group as any).memberCount ?? group.member_count ?? 0;
+          const wasted = Math.max(
+            0,
+            (Number.isFinite(gSize) ? gSize : 0) *
+              Math.max(0, (Number.isFinite(gCount) ? gCount : 0) - 1),
+          );
           return (
             <div className={`group ${isExpanded ? "expanded" : ""}`}>
               <div
@@ -291,7 +304,7 @@ function Mode1Review() {
                   <strong className="filename">{group.filename}</strong>
                   <span className="ext">.{group.ext}</span>
                   <span className="count">
-                    {group.member_count} archivos
+                    {gCount || 0} archivos
                   </span>
                 </div>
                 <div className="group-wasted">
