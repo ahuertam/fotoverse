@@ -497,3 +497,12 @@ de Windows y macOS).
 
 Si una fase descubre trabajo no contemplado, **se actualiza este roadmap
 en el mismo PR** (no se hace work silencioso fuera de scope).
+
+## Releases
+
+- **v0.1.0** (2026-06-09): primera release jugable. Tag `v0.1.0`.
+  4 modos, thumbnails, pHash, papelera. Sin code signing.
+- **v0.2.0** (en planning): ver [`ROADMAP_v0.2.md`](ROADMAP_v0.2.md).
+  Fases A–I: code signing, ffmpeg-sidecar, tests JS, toggle
+  ocultos, easter egg, tema claro, capturas reales, plan B de
+  vídeos, mejoras de UX. Estimado: 9–14 días.
