@@ -12,7 +12,7 @@ pub enum AppError {
     #[error("Error de base de datos: {0}")]
     Db(#[from] rusqlite::Error),
 
-    #[error("Error de I/O: {0}")]
+    #[error("Error de E/S: {0}")]
     Io(#[from] std::io::Error),
 
     #[error("Error recorriendo el sistema de archivos: {0}")]
@@ -24,7 +24,7 @@ pub enum AppError {
     #[error("El escaneo fue cancelado por el usuario")]
     Cancelled,
 
-    #[error("Ya hay un escaneo en curso (session_id={0})")]
+    #[error("Ya hay un escaneo en curso (sesión {0})")]
     AlreadyRunning(i64),
 
     #[error("La sesión {0} no existe")]
@@ -43,6 +43,16 @@ impl AppError {
     pub fn other(msg: impl Into<String>) -> Self {
         Self::Other(msg.into())
     }
+
+    /// Mensaje user-friendly en español. Idéntico a `to_string()`
+    /// por ahora, pero este método es el contrato estable: si
+    /// en el futuro queremos mapear errores técnicos a mensajes
+    /// más simples (ej. "DB corrupta" en vez del `rusqlite::Error`
+    /// crudo), lo hacemos aquí sin cambiar el contrato de
+    /// serialización.
+    pub fn user_message(&self) -> String {
+        self.to_string()
+    }
 }
 
 impl From<String> for AppError {
@@ -60,7 +70,7 @@ impl From<&str> for AppError {
 /// Serializa el error como un string legible (en español) para el frontend.
 impl Serialize for AppError {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(&self.to_string())
+        serializer.serialize_str(&self.user_message())
     }
 }
 

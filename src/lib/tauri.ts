@@ -8,6 +8,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { load, Store } from "@tauri-apps/plugin-store";
 
 import type {
   ExactGroup,
@@ -176,6 +177,66 @@ export async function getVideoAndHeavy(
   return invoke<VideoAndHeavyResult>("get_video_and_heavy", {
     args: { sessionId, topN },
   });
+}
+
+// ---------------------------------------------------------------------------
+// Fase 9 — Settings (tauri-plugin-store)
+// ---------------------------------------------------------------------------
+
+const SETTINGS_FILE = "settings.json";
+
+/** Settings persistentes. Almacenados en app_data_dir. */
+export interface AppSettings {
+  /** Incluir archivos/carpetas ocultos (`.jpg`, `.photoslibrary`).
+   * Default: true (los oculta son comunes en Macs). */
+  includeHidden: boolean;
+  /** Última carpeta seleccionada (para "Re-escanea aquí"). */
+  lastFolder: string | null;
+  /** Tema visual. Default: "dark". */
+  theme: "dark" | "light";
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  includeHidden: true,
+  lastFolder: null,
+  theme: "dark",
+};
+
+let cachedStore: Store | null = null;
+
+async function getStore(): Promise<Store> {
+  if (cachedStore) return cachedStore;
+  cachedStore = await load(SETTINGS_FILE, {
+    autoSave: true,
+    defaults: DEFAULT_SETTINGS as unknown as Record<string, unknown>,
+  });
+  return cachedStore;
+}
+
+export async function getSettings(): Promise<AppSettings> {
+  try {
+    const s = await getStore();
+    return {
+      includeHidden: (await s.get<boolean>("includeHidden")) ?? DEFAULT_SETTINGS.includeHidden,
+      lastFolder: (await s.get<string | null>("lastFolder")) ?? DEFAULT_SETTINGS.lastFolder,
+      theme: (await s.get<"dark" | "light">("theme")) ?? DEFAULT_SETTINGS.theme,
+    };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export async function setSetting<K extends keyof AppSettings>(
+  key: K,
+  value: AppSettings[K],
+): Promise<void> {
+  try {
+    const s = await getStore();
+    await s.set(key, value);
+    await s.save();
+  } catch (e) {
+    console.error("[settings] no se pudo guardar:", e);
+  }
 }
 
 // ---------------------------------------------------------------------------

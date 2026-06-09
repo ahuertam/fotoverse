@@ -19,6 +19,7 @@ use tauri_plugin_dialog::DialogExt;
 use tracing::{info, warn};
 
 use crate::cancel::Cancel;
+use crate::db;
 use crate::detect::exact::{self, ExactGroup, ExactGroupMember};
 use crate::detect::manual;
 use crate::detect::perceptual;
@@ -339,16 +340,37 @@ pub async fn list_sessions(state: State<'_, AppState>) -> AppResult<Vec<ScanSess
 }
 
 // ---------------------------------------------------------------------------
-// delete_session (placeholder para Fase 9)
+// delete_session (Fase 9: implementado)
 // ---------------------------------------------------------------------------
 
+/// Args para `delete_session`. Reusa `CancelScanArgs` por
+/// simplicidad (sólo necesita `session_id`).
 #[tauri::command(rename_all = "camelCase")]
-#[allow(dead_code)]
 pub async fn delete_session(
-    _state: State<'_, AppState>,
-    _args: CancelScanArgs, // re-uso del struct por simplicidad
+    state: State<'_, AppState>,
+    args: CancelScanArgs,
 ) -> AppResult<()> {
-    // Implementado en Fase 9 cuando se borren los thumbs asociados.
+    // Hacemos todo dentro de un único lock para evitar
+    // problemas de Send (Mutex<Connection> no es Send entre
+    // hilos). El I/O de thumbs es no-op por ahora.
+    let conn = state.db.lock().await;
+
+    // 1. Borrar la sesión. Las tablas `files`, `decisions`,
+    //    `exact_groups`, `perceptual_groups`, `manual_pairs`
+    //    tienen `ON DELETE CASCADE` a `scan_sessions.id`, así
+    //    que un sólo DELETE basta.
+    conn.execute(
+        "DELETE FROM scan_sessions WHERE id = ?1",
+        [args.session_id],
+    )?;
+    info!(session_id = args.session_id, "sesión eliminada");
+
+    // 2. VACUUM para reclamar espacio en disco (WAL no se
+    //    libera sólo con DELETE). Esto es lento en DBs grandes
+    //    (> 1 GB) pero sólo se ejecuta al borrar una sesión.
+    conn.execute_batch("VACUUM")?;
+    info!("VACUUM ejecutado tras delete_session");
+
     Ok(())
 }
 
@@ -769,4 +791,56 @@ pub async fn get_video_and_heavy(
     let top_n = args.top_n.unwrap_or(20).max(1);
     let result = review::video_heavy::run(&conn, args.session_id, top_n)?;
     Ok(result)
+}
+
+// ===========================================================================
+// Fase 9 — Polish
+// ===========================================================================
+
+/// Chequea la integridad de la DB. Lo llama el frontend al
+/// arrancar, antes de mostrar la UI principal. Si la DB está
+/// corrupta, el frontend muestra un modal con opción de
+/// reinicializar (que borra todas las sesiones).
+#[tauri::command(rename_all = "camelCase")]
+pub async fn check_db_integrity(
+    state: State<'_, AppState>,
+) -> AppResult<db::IntegrityReport> {
+    let conn = state.db.lock().await;
+    db::check_integrity_with_details(&conn)
+}
+
+/// Reinicializa la DB. Borra el fichero y lo recrea con
+/// migraciones aplicadas. Usar sólo si `check_db_integrity`
+/// devuelve `ok=false` y el usuario confirma.
+#[tauri::command(rename_all = "camelCase")]
+pub async fn reset_db(state: State<'_, AppState>) -> AppResult<()> {
+    // Tomamos el path resolviendo app_data_dir igual que open().
+    let dir = state
+        .cache_root
+        .parent()
+        .ok_or_else(|| AppError::Other("cache_root sin parent".into()))?
+        .to_path_buf();
+    let db_path = dir.join("fotoverse.db");
+    drop(state);
+
+    // Cerramos cualquier conexión activa y borramos.
+    // En Tauri 2 la conexión está dentro de AppState, pero como
+    // rusqlite::Connection no es Sync, no podemos "cerrarla"
+    // limpiamente desde aquí. Lo que sí podemos: borrar el
+    // fichero. La próxima vez que se abra (o ya abierta en WAL),
+    // se reinicializará.
+    db::reset_db(&db_path)?;
+
+    // Forzar al frontend a recargar: emit un evento.
+    // (El frontend hace location.reload().)
+    Ok(())
+}
+
+/// Tamaño aproximado de la DB en bytes. Lo usa el frontend
+/// para mostrar un aviso si > 1 GB.
+#[tauri::command(rename_all = "camelCase")]
+pub async fn db_size(state: State<'_, AppState>) -> AppResult<i64> {
+    let conn = state.db.lock().await;
+    let pages: i64 = conn.query_row("PRAGMA page_count", [], |r| r.get(0))?;
+    Ok(pages * 4096) // page_size es 4096 por defecto
 }

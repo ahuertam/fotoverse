@@ -78,3 +78,65 @@ pub fn check_integrity(conn: &Connection) -> AppResult<bool> {
         Ok(false)
     }
 }
+
+/// Resultado de [`check_integrity_with_details`]: estado de la DB
+/// y, si está corrupta, diagnóstico.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IntegrityReport {
+    pub ok: bool,
+    /// Mensaje crudo de `PRAGMA integrity_check`. "ok" si todo
+    /// bien, o una descripción del problema si está corrupta.
+    pub details: String,
+}
+
+impl IntegrityReport {
+    pub fn ok() -> Self {
+        Self { ok: true, details: "ok".into() }
+    }
+}
+
+/// Variante de `check_integrity` que devuelve el mensaje crudo
+/// de `PRAGMA integrity_check` para diagnóstico.
+pub fn check_integrity_with_details(conn: &Connection) -> AppResult<IntegrityReport> {
+    let mut stmt = conn.prepare("PRAGMA integrity_check")?;
+    let mut rows = stmt.query([])?;
+    let details: String = if let Some(row) = rows.next()? {
+        row.get(0)?
+    } else {
+        "no rows".into()
+    };
+    let ok = details.trim() == "ok";
+    if !ok {
+        warn!(details = %details, "DB corrupta detectada por integrity_check");
+    }
+    Ok(IntegrityReport { ok, details })
+}
+
+/// Elimina el fichero de DB y lo recrea vacío. **Destructivo**:
+/// borra todas las sesiones. Usar sólo si `check_integrity`
+/// falla y el usuario confirma.
+pub fn reset_db(path: &Path) -> AppResult<()> {
+    warn!(path = %path.display(), "reseteando base de datos");
+    if path.exists() {
+        std::fs::remove_file(path).map_err(|e| {
+            AppError::Io(std::io::Error::new(
+                e.kind(),
+                format!("no se pudo borrar {}: {e}", path.display()),
+            ))
+        })?;
+    }
+    // Borrar también los ficheros WAL/SHM si existen.
+    for ext in ["-wal", "-shm", "-journal"] {
+        let p = path.with_extension(
+            path.extension()
+                .and_then(|e| e.to_str())
+                .map(|e| format!("{e}{ext}"))
+                .unwrap_or_else(|| ext.to_string()),
+        );
+        if p.exists() {
+            let _ = std::fs::remove_file(&p);
+        }
+    }
+    Ok(())
+}

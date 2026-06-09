@@ -51,6 +51,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
             // Abrir y migrar la base de datos antes de que la UI
             // pueda hacer nada.
@@ -87,6 +88,9 @@ pub fn run() {
             commands::get_final_review,
             commands::execute_deletions,
             commands::get_video_and_heavy,
+            commands::check_db_integrity,
+            commands::reset_db,
+            commands::db_size,
         ])
         .run(tauri::generate_context!())
         .expect("error fatal al ejecutar la aplicación fotoverse");

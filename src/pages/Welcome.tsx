@@ -15,7 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Splash } from "../components/Splash";
-import { pickFolder, startScan } from "../lib/tauri";
+import { pickFolder, setSetting, startScan } from "../lib/tauri";
 import type { ScanMode } from "../lib/types";
 
 const DEFAULT_MODES: ScanMode[] = ["exact", "perceptual", "manual"];
@@ -35,6 +35,8 @@ function Welcome() {
         // Usuario canceló el dialog.
         return;
       }
+      // Persistir la última carpeta para la próxima sesión.
+      void setSetting("lastFolder", root);
       const session = await startScan(root, DEFAULT_MODES);
       navigate(`/scan/${session.id}`);
     } catch (e) {
@@ -60,6 +62,14 @@ function Welcome() {
           disabled={busy}
         >
           {busy ? "Iniciando escaneo…" : "Elegir carpeta…"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate("/settings")}
+          style={{ marginTop: "0.5rem" }}
+        >
+          Ajustes
         </button>
 
         {error && <p className="error">⚠️ {error}</p>}

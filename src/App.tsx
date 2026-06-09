@@ -7,6 +7,7 @@ import Mode3Review from "./pages/Mode3Review";
 import ModeVideoAndHeavy from "./pages/ModeVideoAndHeavy";
 import NotFound from "./pages/NotFound";
 import ScanProgress from "./pages/ScanProgress";
+import Settings from "./pages/Settings";
 import Welcome from "./pages/Welcome";
 
 /**
@@ -17,6 +18,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Welcome />} />
+      <Route path="/settings" element={<Settings />} />
       <Route path="/scan/:id" element={<ScanProgress />} />
       <Route path="/review/:id/mode1" element={<Mode1Review />} />
       <Route path="/review/:id/mode2" element={<Mode2Review />} />
