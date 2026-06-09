@@ -124,42 +124,82 @@ function ScanProgressPage() {
             </p>
           )}
           {completed?.error && <p className="error">⚠️ {completed.error}</p>}
+
+          <div className="next-steps">
+            <p className="muted small" style={{ marginTop: "1.5rem" }}>
+              ¿Qué quieres hacer ahora?
+            </p>
+          </div>
+
           <div className="done-actions">
             <button
               type="button"
-              className="primary"
+              className="mode-btn primary"
               onClick={() => navigate(`/review/${sessionId}/mode1`)}
               disabled={completed?.status !== "completed"}
             >
-              Revisar duplicados (Modo 1) →
+              <span className="mode-icon">🔍</span>
+              <span className="mode-text">
+                <strong>Duplicados exactos</strong>
+                <small>Mismo nombre y tamaño — fotos idénticas</small>
+              </span>
+              <span className="mode-arrow">→</span>
             </button>
+
             <button
               type="button"
+              className="mode-btn"
               onClick={() => navigate(`/review/${sessionId}/mode2`)}
               disabled={completed?.status !== "completed"}
             >
-              Revisar duplicados perceptuales (Modo 2) →
+              <span className="mode-icon">🎨</span>
+              <span className="mode-text">
+                <strong>Similares</strong>
+                <small>Imágenes que se parecen aunque no sean idénticas</small>
+              </span>
+              <span className="mode-arrow">→</span>
             </button>
+
             <button
               type="button"
-              onClick={() => navigate(`/review/${sessionId}/mode3`)}
-              disabled={completed?.status !== "completed"}
-            >
-              Revisar manualmente (Modo 3) →
-            </button>
-            <button
-              type="button"
+              className="mode-btn"
               onClick={() => navigate(`/review/${sessionId}/mode4`)}
               disabled={completed?.status !== "completed"}
             >
-              Vídeos y peso (Modo 4) →
+              <span className="mode-icon">🎬</span>
+              <span className="mode-text">
+                <strong>Vídeos pesados</strong>
+                <small>Los más gordos con ahorro estimado al comprimir</small>
+              </span>
+              <span className="mode-arrow">→</span>
             </button>
+
             <button
               type="button"
-              onClick={() => navigate("/")}
+              className="mode-btn"
+              onClick={() => navigate(`/review/${sessionId}/mode3`)}
+              disabled={completed?.status !== "completed"}
             >
-              Volver al inicio
+              <span className="mode-icon">👁</span>
+              <span className="mode-text">
+                <strong>Revisión visual</strong>
+                <small>Compara uno a uno los que las máquinas no saben</small>
+              </span>
+              <span className="mode-arrow">→</span>
             </button>
+
+            <div className="done-actions-secondary">
+              <button
+                type="button"
+                onClick={() => navigate(`/review/${sessionId}/final`)}
+                disabled={completed?.status !== "completed"}
+              >
+                🗑️ Revisar y enviar a la papelera
+              </button>
+              <button type="button" onClick={() => navigate("/")}>
+                ← Empezar otro escaneo
+              </button>
+            </div>
           </div>
         </section>
       ) : (

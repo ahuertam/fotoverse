@@ -262,9 +262,92 @@ button.primary:hover:not(:disabled) {
 .scan-progress .done-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  align-items: center;
+  gap: var(--space-3);
+  align-items: stretch;
   margin-top: var(--space-4);
+  max-width: 32rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Botones grandes con icono + texto para los "modos" de
+   ScanProgress. Sustituyen a los <button> planos con
+   "(Modo 1)" que eran frios. */
+.mode-btn {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-elevated);
+  border: 1px solid #232730;
+  border-radius: var(--radius-md);
+  color: var(--color-fg);
+  text-align: left;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+.mode-btn:hover:not(:disabled) {
+  background: #232730;
+  border-color: var(--color-accent);
+}
+.mode-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.mode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mode-btn .mode-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.mode-btn .mode-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mode-btn .mode-text strong {
+  font-weight: 600;
+  color: var(--color-fg);
+}
+.mode-btn .mode-text small {
+  color: var(--color-fg-muted);
+  font-size: 0.8125rem;
+  line-height: 1.3;
+}
+.mode-btn .mode-arrow {
+  color: var(--color-fg-muted);
+  font-size: 1.25rem;
+}
+.mode-btn.primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+.mode-btn.primary:hover:not(:disabled) {
+  background: #3b78e8;
+  border-color: #3b78e8;
+}
+.mode-btn.primary .mode-text strong,
+.mode-btn.primary .mode-arrow {
+  color: #fff;
+}
+.mode-btn.primary .mode-text small {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Acciones secundarias (papelera, volver) más sutiles */
+.done-actions-secondary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  align-items: center;
+}
+.done-actions-secondary button {
+  width: 100%;
 }
 
 /* Mode1Review ----------------------------------------------------------- */
