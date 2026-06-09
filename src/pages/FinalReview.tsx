@@ -161,15 +161,30 @@ function FinalReview() {
   if (items.length === 0) {
     return (
       <main className="mode1-review">
+        <nav className="breadcrumb">
+          <button type="button" onClick={() => navigate("/")}>
+            Inicio
+          </button>
+          <span className="bc-sep">›</span>
+          <button
+            type="button"
+            onClick={() => navigate(`/scan/${sessionId}`)}
+          >
+            Escaneo #{sessionId}
+          </button>
+          <span className="bc-sep">›</span>
+          <span className="bc-current">🗑️ Papelera</span>
+        </nav>
         <header>
-          <h1>Revisión final</h1>
+          <h1>🗑️ Papelera</h1>
           <p className="muted">
-            No marcaste ningún fichero para borrar. Vuelve a los modos
-            anteriores si quieres reconsiderar.
+            🎉 No has marcado ningún fichero para borrar. Vuelve
+            a los modos anteriores y selecciona los duplicados
+            que quieras enviar a la papelera.
           </p>
         </header>
-        <button type="button" onClick={() => navigate("/")}>
-          Volver al inicio
+        <button type="button" onClick={() => navigate(`/scan/${sessionId}`)}>
+          ← Resumen del escaneo
         </button>
       </main>
     );
@@ -177,16 +192,34 @@ function FinalReview() {
 
   return (
     <main className="mode1-review">
+      <nav className="breadcrumb">
+        <button type="button" onClick={() => navigate("/")}>
+          Inicio
+        </button>
+        <span className="bc-sep">›</span>
+        <button
+          type="button"
+          onClick={() => navigate(`/scan/${sessionId}`)}
+        >
+          Escaneo #{sessionId}
+        </button>
+        <span className="bc-sep">›</span>
+        <span className="bc-current">🗑️ Papelera</span>
+      </nav>
+
       <header>
-        <h1>Revisión final</h1>
+        <h1>🗑️ Papelera</h1>
+        <p className="muted small">
+          Aquí ves todo lo que marcaste para borrar en los 3
+          modos. Los ficheros que NO quieres, desmárcalos. Los
+          demás se enviarán a la papelera de tu sistema (Finder
+          en Mac, Recycle Bin en Windows) — nunca se borran
+          permanentemente.
+        </p>
         <p className="summary">
           <strong>{items.length}</strong>{" "}
           {items.length === 1 ? "fichero" : "ficheros"} ·{" "}
           <strong>{formatBytes(totalBytes)}</strong> totales
-        </p>
-        <p className="muted">
-          Desmarca los ficheros que NO quieres borrar. Los
-          desmarcados NO se enviarán a la papelera.
         </p>
         <p className="summary">
           Se enviarán a la papelera:{" "}
@@ -196,7 +229,7 @@ function FinalReview() {
           {needsTypedConfirm && (
             <span style={{ color: "var(--color-warn)" }}>
               {" "}
-              ⚠️ requiere confirmación tipada
+              ⚠️ borrado grande — pedirá confirmación extra
             </span>
           )}
         </p>
@@ -285,18 +318,30 @@ function FinalReview() {
             }}
           >
             <h2 style={{ color: "var(--color-warn)" }}>
-              ⚠️ Borrado masivo
+              ⚠️ Vas a borrar mucho
             </h2>
             <p>
               Vas a enviar <strong>{toDeleteCount}</strong>{" "}
               {toDeleteCount === 1 ? "fichero" : "ficheros"} (
               <strong>{formatBytes(toDeleteBytes)}</strong>) a la
-              papelera.
+              papelera de tu sistema.
             </p>
-            <p>
+            <p
+              className="muted small"
+              style={{
+                background: "rgba(0,0,0,0.3)",
+                padding: "0.75rem",
+                borderRadius: "4px",
+                marginTop: "0.75rem",
+              }}
+            >
+              ℹ️ No se borran permanentemente: van a la papelera
+              de tu sistema y puedes recuperarlos desde ahí.
+            </p>
+            <p style={{ marginTop: "1rem" }}>
               Para confirmar, escribe{" "}
               <code style={{ background: "#000", padding: "2px 6px" }}>
-                ELIMINAR
+                enviar a la papelera
               </code>{" "}
               en el campo de abajo:
             </p>
@@ -309,7 +354,6 @@ function FinalReview() {
               style={{
                 width: "100%",
                 padding: "0.5rem",
-                fontFamily: "monospace",
                 fontSize: "1rem",
                 background: "#000",
                 color: "#fff",
@@ -336,10 +380,12 @@ function FinalReview() {
               <button
                 type="button"
                 className="primary"
-                disabled={busy || typedConfirm !== "ELIMINAR"}
+                disabled={
+                  busy || typedConfirm.toLowerCase() !== "enviar a la papelera"
+                }
                 onClick={() => void doDelete()}
               >
-                {busy ? "Enviando…" : "🗑️ Eliminar"}
+                {busy ? "Enviando…" : "🗑️ Sí, enviar a la papelera"}
               </button>
             </div>
           </div>

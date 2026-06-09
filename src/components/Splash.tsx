@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from "react";
 
-import splashUrl from "../assets/splash-placeholder.jpg";
+import splashUrl from "../assets/logo.jpeg";
 
 export interface SplashProps {
   onDone?: () => void;
@@ -25,28 +25,16 @@ export interface SplashProps {
 
 export function Splash({ onDone, minDurationMs = 1200 }: SplashProps) {
   const [opacity, setOpacity] = useState(0);
-  const [captionOpacity, setCaptionOpacity] = useState(0);
 
   useEffect(() => {
-    // Fade-in de la imagen (300 ms) y del caption (200 ms después).
+    // Fade-in (30 ms) → mantener (minDurationMs) → fade-out (600 ms)
+    // → notificar al padre.
     const fadeIn = window.setTimeout(() => setOpacity(1), 30);
-    const captionIn = window.setTimeout(() => setCaptionOpacity(0.85), 280);
-
-    // Fade-out a los `minDurationMs` (1200 ms por defecto).
-    const fadeOut = window.setTimeout(() => {
-      setOpacity(0);
-      setCaptionOpacity(0);
-    }, minDurationMs);
-
-    // Notificar al padre a los `minDurationMs + 600` ms (después
-    // del fade-out de 600 ms).
-    const done = window.setTimeout(() => {
-      onDone?.();
-    }, minDurationMs + 600);
+    const fadeOut = window.setTimeout(() => setOpacity(0), minDurationMs);
+    const done = window.setTimeout(() => onDone?.(), minDurationMs + 600);
 
     return () => {
       window.clearTimeout(fadeIn);
-      window.clearTimeout(captionIn);
       window.clearTimeout(fadeOut);
       window.clearTimeout(done);
     };
@@ -70,43 +58,24 @@ export function Splash({ onDone, minDurationMs = 1200 }: SplashProps) {
     >
       <img
         src={splashUrl}
-        alt="fotoverse splash placeholder"
+        alt="fotoverse"
         style={{
-          maxWidth: "min(70vw, 640px)",
-          maxHeight: "60vh",
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+          width: "min(60vw, 360px)",
+          height: "auto",
+          borderRadius: "32px",
+          boxShadow: "0 16px 64px rgba(0,0,0,0.5)",
         }}
       />
-      <h1
+      <p
         style={{
+          color: "var(--color-fg-muted)",
+          fontSize: "1.1rem",
           marginTop: "1.5rem",
-          fontSize: "2.5rem",
-          color: "var(--color-fg)",
+          maxWidth: "32rem",
+          textAlign: "center",
         }}
       >
-        fotoverse
-      </h1>
-      <p
-        style={{
-          color: "var(--color-fg-muted)",
-          fontSize: "1rem",
-          marginTop: "0.25rem",
-        }}
-      >
-        Encuentra duplicados en tu biblioteca
-      </p>
-      <p
-        style={{
-          color: "var(--color-fg-muted)",
-          fontSize: "0.7rem",
-          marginTop: "2rem",
-          opacity: captionOpacity,
-          transition: "opacity 400ms ease-in-out",
-          fontFamily: "var(--font-mono)",
-        }}
-      >
-        ⚠ placeholder · el branding real llegará en v0.2
+        Encuentra fotos y vídeos duplicados en tu biblioteca
       </p>
     </div>
   );

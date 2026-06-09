@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Splash } from "../components/Splash";
+import logoUrl from "../assets/logo.jpeg";
 import { pickFolder, setSetting, startScan } from "../lib/tauri";
 import type { ScanMode } from "../lib/types";
 
@@ -50,9 +51,20 @@ function Welcome() {
     <>
       {!splashDone && <Splash onDone={() => setSplashDone(true)} />}
       <main className="welcome" style={{ opacity: splashDone ? 1 : 0, transition: "opacity 400ms ease-in-out" }}>
+        <img
+          src={logoUrl}
+          alt="fotoverse"
+          style={{
+            width: "180px",
+            height: "180px",
+            borderRadius: "36px",
+            marginBottom: "1rem",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          }}
+        />
         <h1>fotoverse</h1>
         <p className="tagline">
-          Encuentra duplicados en tu biblioteca de fotos y vídeos.
+          Encuentra fotos y vídeos duplicados en tu biblioteca
         </p>
 
         <button

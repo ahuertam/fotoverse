@@ -78,9 +78,7 @@ function Settings() {
           Por defecto activado: muchos sistemas guardan fotos en
           carpetas como <code>.photoslibrary</code> o
           <code> .config</code>. Desactívalo si quieres excluirlas.
-          (El cambio se aplica en el próximo escaneo; la
-          implementación backend es Fase 9+ — por ahora el
-          walk siempre incluye ocultos.)
+          El cambio se aplicará en el próximo escaneo.
         </p>
 
         <label
@@ -100,15 +98,14 @@ function Settings() {
             disabled={saving}
           >
             <option value="dark">Oscuro</option>
-            <option value="light">Claro (placeholder v0.2)</option>
+            <option value="light">Claro (próximamente)</option>
           </select>
         </label>
         <p
           className="muted small"
           style={{ marginTop: 0, marginLeft: "1.5rem" }}
         >
-          El tema claro es un placeholder de v0.2; por ahora
-          sólo se persiste el ajuste.
+          Por ahora sólo está disponible el tema oscuro.
         </p>
 
         {settings.lastFolder && (
