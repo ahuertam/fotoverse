@@ -232,19 +232,35 @@ function Mode2Review() {
 
   return (
     <main className="mode1-review">
+      <nav className="breadcrumb">
+        <button type="button" onClick={() => navigate("/")}>
+          Inicio
+        </button>
+        <span className="bc-sep">›</span>
+        <button
+          type="button"
+          onClick={() => navigate(`/scan/${sessionId}`)}
+        >
+          Escaneo #{sessionId}
+        </button>
+        <span className="bc-sep">›</span>
+        <span className="bc-current">🎨 Similares</span>
+      </nav>
+
       <header>
-        <h1>Coincidencias perceptuales</h1>
+        <h1>🎨 Similares</h1>
+        <p className="muted small">
+          Imágenes que se parecen pero no son idénticas. Detectamos
+          la similitud con un hash perceptual (DCT 32×32). Útil
+          para fotos que recomprimiste a distinto tamaño.
+        </p>
         <p className="summary">
           <strong>{total}</strong> {total === 1 ? "grupo" : "grupos"} ·{" "}
           <strong>{totalWasted}</strong> copias detectadas
         </p>
         <p className="muted">
-          Sugerencia: mantener el más antiguo (badge "Más antiguo"),
-          borrar los perceptualmente similares.
-        </p>
-        <p className="muted">
-          Sugerencia: mantener el más antiguo (badge "Más antiguo"),
-          borrar los perceptualmente similares.
+          💡 Sugerencia: mantén el más antiguo (badge "Más antiguo"),
+          borra los perceptualmente similares.
         </p>
       </header>
 
@@ -400,12 +416,25 @@ function Mode2Review() {
       />
 
       <footer className="mode1-footer">
-        <button type="button" onClick={() => navigate("/")}>
-          ← Volver al inicio
+        <button
+          type="button"
+          onClick={() => navigate(`/scan/${sessionId}`)}
+        >
+          ← Resumen del escaneo
         </button>
-        <span className="muted">
-          (Fase 6 habilitará "Siguiente: vídeos perceptuales")
-        </span>
+        <button
+          type="button"
+          onClick={() => navigate(`/review/${sessionId}/mode4`)}
+        >
+          🎬 Ver vídeos pesados →
+        </button>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => navigate(`/review/${sessionId}/final`)}
+        >
+          🗑️ Revisar y enviar a la papelera
+        </button>
       </footer>
     </main>
   );

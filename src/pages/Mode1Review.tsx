@@ -232,15 +232,35 @@ function Mode1Review() {
 
   return (
     <main className="mode1-review">
+      <nav className="breadcrumb">
+        <button type="button" onClick={() => navigate("/")}>
+          Inicio
+        </button>
+        <span className="bc-sep">›</span>
+        <button
+          type="button"
+          onClick={() => navigate(`/scan/${sessionId}`)}
+        >
+          Escaneo #{sessionId}
+        </button>
+        <span className="bc-sep">›</span>
+        <span className="bc-current">🔍 Duplicados exactos</span>
+      </nav>
+
       <header>
-        <h1>Coincidencias exactas</h1>
+        <h1>🔍 Duplicados exactos</h1>
+        <p className="muted small">
+          Mismo nombre + extensión + tamaño + fecha. Suele ser la
+          copia que dejaste en otra carpeta o el archivo que
+          sincronizaste dos veces.
+        </p>
         <p className="summary">
           <strong>{total}</strong> {total === 1 ? "grupo" : "grupos"} ·{" "}
           <strong>{formatBytes(totalWasted)}</strong> desperdiciados
         </p>
         <p className="muted">
-          Sugerencia: mantener el archivo con fecha más antigua, marcar
-          los demás como "borrar".
+          💡 Sugerencia: en cada grupo, mantén el archivo más
+          antiguo (badge "Más antiguo") y borra el resto.
         </p>
       </header>
 
@@ -372,12 +392,25 @@ function Mode1Review() {
       />
 
       <footer className="mode1-footer">
-        <button type="button" onClick={() => navigate("/")}>
-          ← Volver al inicio
+        <button
+          type="button"
+          onClick={() => navigate(`/scan/${sessionId}`)}
+        >
+          ← Resumen del escaneo
         </button>
-        <span className="muted">
-          (La Fase 5 habilitará "Siguiente: duplicados perceptuales")
-        </span>
+        <button
+          type="button"
+          onClick={() => navigate(`/review/${sessionId}/mode2`)}
+        >
+          🎨 Ver similares →
+        </button>
+        <button
+          type="button"
+          className="primary"
+          onClick={() => navigate(`/review/${sessionId}/final`)}
+        >
+          🗑️ Revisar y enviar a la papelera
+        </button>
       </footer>
     </main>
   );

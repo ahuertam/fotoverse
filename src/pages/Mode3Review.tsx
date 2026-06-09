@@ -276,14 +276,36 @@ function Mode3Review() {
 
   return (
     <main className="mode1-review">
+      <nav className="breadcrumb">
+        <button type="button" onClick={() => navigate("/")}>
+          Inicio
+        </button>
+        <span className="bc-sep">›</span>
+        <button
+          type="button"
+          onClick={() => navigate(`/scan/${sessionId}`)}
+        >
+          Escaneo #{sessionId}
+        </button>
+        <span className="bc-sep">›</span>
+        <span className="bc-current">👁 Revisión visual</span>
+      </nav>
+
       <header>
-        <h1>Revisión visual</h1>
+        <h1>👁 Revisión visual</h1>
+        <p className="muted small">
+          Compara uno a uno los pares que las máquinas no saben
+          decidir. Útil cuando hay dos fotos que se parecen pero no
+          puedes asegurar cuál es "la buena".
+        </p>
         <p className="summary">
           {total} {total === 1 ? "par" : "pares"} restantes
         </p>
         <p className="muted small">
-          ← Borrar izda · → Borrar dcha · A Borrar ambas · ↓ Saltar ·
-          Espacio Mantener ambas · Esc Salir
+          ⌨️ <strong>←</strong> Borrar izda · <strong>→</strong> Borrar
+          dcha · <strong>A</strong> Borrar ambas · <strong>↓</strong>{" "}
+          Saltar · <strong>Espacio</strong> Mantener ambas ·{" "}
+          <strong>Esc</strong> Salir
         </p>
       </header>
 
