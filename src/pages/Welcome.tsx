@@ -56,8 +56,8 @@ function Welcome() {
           alt="fotoverse"
           style={{
             width: "180px",
-            height: "180px",
-            borderRadius: "36px",
+            height: "auto",
+            borderRadius: "24px",
             marginBottom: "1rem",
             boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
           }}

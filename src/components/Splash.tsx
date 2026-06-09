@@ -60,9 +60,9 @@ export function Splash({ onDone, minDurationMs = 1200 }: SplashProps) {
         src={splashUrl}
         alt="fotoverse"
         style={{
-          width: "min(60vw, 360px)",
+          width: "min(40vw, 240px)",
           height: "auto",
-          borderRadius: "32px",
+          borderRadius: "24px",
           boxShadow: "0 16px 64px rgba(0,0,0,0.5)",
         }}
       />
