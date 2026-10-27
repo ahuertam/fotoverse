@@ -118,6 +118,19 @@ jobs:
         working-directory: src-tauri
         run: cargo fmt --all -- --check
 
+      # Invariante de producto: los ficheros del usuario NUNCA se borran de
+      # forma permanente. db/mod.rs queda excluido porque solo borra el propio
+      # fichero SQLite y sus -wal/-shm, nunca fotos ni vídeos.
+      - name: Check no permanent file removal
+        working-directory: src-tauri
+        shell: bash
+        run: |
+          if grep -rn 'remove_file\|remove_dir' src/ | grep -v 'db/mod.rs'; then
+            echo "::error::remove_file/remove_dir fuera de db/mod.rs rompe la promesa de papelera"
+            exit 1
+          fi
+          echo "OK: el borrado de ficheros del usuario va solo por trash::delete_all"
+
   # ---------------------------------------------------------------------------
   # Audit: alertar de vulnerabilidades conocidas en deps.
   # ---------------------------------------------------------------------------
