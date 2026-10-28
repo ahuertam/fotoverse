@@ -853,6 +853,124 @@ Record): **contexto**, **decisión**, **consecuencias**, **alternativas**.
   - **react-window**: minimalista y rápido, pero menos flexible con
     alturas variables.
 
+### ADR-010 — On-device embeddings: candle + CLIP sobre llama.cpp
+
+- **Estado**: **decidido, pendiente de implementar.** No hay código todavía.
+  Por tamaño no cabe en v0.2.0: es un proyecto de v0.3.0.
+  El plan de implementación está en [`LOCAL_AI.md`](LOCAL_AI.md).
+- **Contexto**:
+  - El Modo 2 resuelve "misma imagen, recomprimida o reescalada". **No**
+    resuelve "misma escena, distinto encuadre": un recorte redistribuye la
+    energía de baja frecuencia y la distancia de Hamming se dispara. Es un
+    hueco de producto real — en una biblioteca de fotos de años, "la misma
+    playa, dos días distintos" es más común que "el mismo archivo duplicado".
+  - Cerrarlo exige un embedding **semántico**, no un hash clásico. Y tiene que
+    ser **local**: la promesa de producto es "nunca se borra nada
+    permanentemente" y "sin acceso a red" (§Seguridad).
+  - La instalación es "doble clic y funciona" (ver ADR-004). Nada puede
+    exigir un toolchain C/C++ en la máquina que compila, ni añadir una
+    dimensión nueva a la CI de 3 SO.
+  - Precedente: en ADR-003 se rechazó `img_hash` y se implementó el pHash a
+    mano. Esta decisión es la **continuación de esa misma política**: cuando
+    la librería no encaja en el stack, se implementa la versión que sí.
+  - La dirección del mercado apunta al mismo sitio: las herramientas de motor
+    piden integrar modelos en el editor y ejecutarlos en el dispositivo.
+    `llama.cpp` es el runtime que más se cita en ese contexto.
+- **Decisión**: **`candle`** (`candle-core` + `candle-transformers`) como
+  motor de inferencia en CPU, con **CLIP ViT-B/32** cuantizado a int8,
+  ejecutándose **en proceso** dentro del backend Rust.
+  - La inferencia sigue el patrón de **ADR-007**: `rayon` con pool acotado a
+    `min(8, ncpu)`, nunca el scheduler de tokio (es CPU-bound).
+  - El modelo **no se empaqueta**. Se descarga de forma explícita por el
+    usuario a `app_cache_dir()/models/`, igual que cualquier herramienta que
+    pide un modelo. La app no hace red por su cuenta: la descarga es un acto
+    del usuario, no una llamada en background.
+  - Los embeddings se guardan en `files.emb BLOB` (512 dims × f16 = **1 KB por
+    imagen**), en paralelo a `files.phash`.
+  - Los fallos de embedding reutilizan `hash_status` / `hash_error`, igual que
+    los de pHash: mismo esquema, misma UI de contadores.
+  - **Modo 5 — Semántico**: clusteriza por similitud coseno con el mismo
+    esquema que `perceptual_groups`.
+  - La torre de texto de CLIP da **búsqueda por texto** sobre la biblioteca,
+    en el mismo espacio de embeddings ("todas las fotos de la playa").
+  - El **umbral de coseno se calibra sobre la fixture `trial/`**, no se copia
+    de la literatura: depende del modelo y no hay valor "correcto".
+- **Consecuencias**:
+  - + Un crate de inferencia en Rust. `cargo` se encarga; **no hay C++ en el
+    build chain** y la CI de 3 SO sigue funcionando sin dimensión nueva.
+  - + CLIP trae las dos torres en el mismo fichero de pesos → imagen-imagen y
+    texto-imagen sin ensamblar dos modelos distintos.
+  - + `candle` se integra con el `rayon` y el crate `image` que ya usa el
+    pipeline. No hay proceso nuevo, ni socket, ni ciclo de vida nuevo.
+  - − **El coste de cómputo sube dos órdenes de magnitud.** El pHash son
+    ~0,1 GFLOPs por imagen; CLIP ViT-B/32 del orden de **~5 GFLOPs**. Medido
+    por lotes y con 8 hilos, 50k imágenes ≈ 15-30 min en un portátil
+    moderno — pero en hardware modesto puede triplicarse. **Es una medición
+    pendiente, no una promesa**: el Paso 2 existe para obtenerla.
+  - − **El modelo pesa.** CLIP ViT-B/32 son ~150M parámetros: el checkpoint
+    completo ronda los 300-600 MB según formato y la torre de visión sola
+    entre 150 y 350 MB. El int8 concreto hay que medirlo, no anunciarlo.
+  - − **Y eso rompe la promesa de binario.** ADR-001-selling-point es un bundle
+    de ~10 MB. Añadir un modelo de cientos de MB **descargado aparte** es un
+    cambio de carácter del producto: de "app que instalas y funciona" a
+    "app que además te pide un modelo". Es asumible —pero hay que
+    decirlo en la UI y en el README, no esconderlo.
+  - − **CLIP tiene limitaciones conocidas y hay que conocerlas.** Se entrenó
+    con ~400M de pares imagen-texto rastreados de internet (no con ImageNet:
+    ImageNet es de dónde salen sus benchmarks). Eso implica:
+    - Reconoce **conceptos amplios** — escenas, objetos, ambientes. Distingue
+      "playa" de "bosque"; no distingue "playa al amanecer" de "playa al
+      atardecer".
+    - **No es un sistema de reconocimiento facial.** Puede tratar "el mismo
+      sujeto" como concepto genérico, pero no identificar a una persona
+      concreta. Para eso haría falta otro modelo, y **no se va a añadir**.
+    - Tiene **sesgos documentados** hacia conceptos occidentales, por la
+      procedencia de los datos. Es un límite conocido de la familia CLIP, no
+      un defecto de esta implementación — pero condiciona qué se puede
+      prometer.
+  - − Los pesos pueden quedar obsoletos. Se guarda **versión del modelo junto
+    al embedding** para poder re-embeber si el modelo cambia, y el formato del
+    vector va versionado.
+  - − `candle` no trae los pesos: hay que bajarlos de HuggingFace y
+    convertirlos al formato cuantizado que soporte candle. Es un paso más que
+    un crate "todo en uno", y la conversión tiene que vivir en un `xtask`,
+    no en un paso manual.
+- **Alternativas consideradas**:
+  - **`llama.cpp`** (vía crate `llama-cpp-2`, o como sidecar `llama-server`):
+    - A favor: es el runtime que más se cita en este contexto; ecosistema
+      GGUF; `mtmd` para multimodal; hay modelos de embedding multimodales en
+      GGUF (p. ej. `jina-embeddings-v5-omni`); espacio texto-imagen
+      compartido.
+    - En contra, **vía crate**: mete `cmake` + `cc` en el build chain. Rompe
+      la instalación "doble clic y funciona" de ADR-004 y añade una dimensión
+      a la CI de 3 SO.
+    - En contra, **vía sidecar** (binarios prebuilt por plataforma, el mismo
+      patrón que `ffmpeg-sidecar`): evita el compilador, pero introduce un
+      proceso más, un socket localhost, otro ciclo de vida que gestionar y
+      otro punto de fallo — por una feature cuyo valor es "las mismas 150
+      líneas de matemáticas, con mejores pesos".
+    - Veredicto: descartado por **coste de integración**, no por calidad del
+      motor.
+  - **ONNX Runtime (`ort`) + `fastembed`**: API de Rust y binarios prebuilt
+    por plataforma, sin toolchain. Es la alternativa más sólida en instalable.
+    Se deja como **plan B a revisar** si el build de `candle` se complica en
+    Windows, que es donde se ha visto fallar a `img_hash`.
+  - **Embeddings vía API (OpenAI, Gemini)**: descartado. Rompe la promesa
+    "100% offline", manda las fotos del usuario a un servidor, y añade coste
+    y latencia a una app cuyo argumento de venta es justamente que todo es
+    local.
+- **Lo que hay que verificar en el spike (Paso 2) antes de comprometer nada**:
+  1. ¿Puede `candle` cargar un CLIP ViT-B/32 **cuantizado a int8**? (requiere
+     el feature `quantized` de candle y el formato de pesos correcto)
+  2. ¿Cuál es el **tamaño real** del cuantizado, y encaja en la descarga
+     explícita?
+  3. ¿Cuántos **ms por imagen** salen de verdad en el hardware de un
+     portátil? Sin ese número, la estimación de arriba es una suposición.
+  4. ¿Puede `candle` leer pesos **GGUF** cuantizados
+     (`candle::quantized::gguf_file`)? Si puede, la historia de distribución
+     de modelos es compatible con el ecosistema GGUF y cambiar de runtime más
+     adelante sale barato.
+
 ---
 
 ## Referencias
@@ -865,4 +983,8 @@ Record): **contexto**, **decisión**, **consecuencias**, **alternativas**.
 - [trash](https://crates.io/crates/trash)
 - [rayon](https://crates.io/crates/rayon)
 - [react-virtuoso](https://virtuoso.dev/)
+- [candle](https://github.com/candle-repo/candle) · [candle-transformers](https://github.com/candle-repo/candle/tree/main/candle-transformers)
+- [CLIP](https://github.com/openai/CLIP) (paper) · [CLIP ViT-B/32 en HuggingFace](https://huggingface.co/sentence-transformers/clip-ViT-B-32)
+- [llama.cpp](https://github.com/ggml-org/llama.cpp) · [multimodal (mtmd)](https://github.com/ggml-org/llama.cpp/blob/master/docs/multimodal.md)
+- [ONNX Runtime](https://onnxruntime.ai/) · [fastembed](https://github.com/qdrant/fastembed)
 - [zustand](https://zustand.docs.pmnd.rs/)

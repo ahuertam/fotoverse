@@ -289,6 +289,11 @@ Si tuviera que elegir 4-5 features para una **v0.2.0 mínima viable**:
 **Fase E (tema claro), Fase G (capturas), Fase H (Plan B), Fase I
 (mejoras)** son nice-to-have para una v0.3.0.
 
+> **Fuera de v0.2.0 por tamaño:** el **Modo 5 semántico con embeddings
+> on-device** (ADR-010: `candle` + CLIP, Modo 5 y búsqueda por texto) es un
+> proyecto completo, no una feature de un día. Va a v0.3.0.
+> El plan de ejecución está en [`LOCAL_AI.md`](LOCAL_AI.md).
+
 ---
 
 ## 4. Estimación total
