@@ -49,9 +49,10 @@ vídeos en diferentes calidades pero con el mismo contenido, etc.
 
 ## Estado del proyecto
 
-**En desarrollo activo.** El plan completo por fases y los criterios de
-"hecho" están en [`docs/ROADMAP.md`](docs/ROADMAP.md). El diseño técnico
-detallado está en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+**v0.1.0 jugable de principio a fin** (Fases 0–9 completas), y en desarrollo activo: el
+plan completo por fases y los criterios de "hecho" están en
+[`docs/ROADMAP.md`](docs/ROADMAP.md). El diseño técnico detallado está en
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Capturas / GIFs
 
@@ -156,7 +157,7 @@ Para una sesión de prueba rápida:
 # Generar fixture (27 imágenes: 20 únicas + hard links para Modo 1)
 cargo test --test fixture -- --nocapture
 
-# Lanzar la app y elegir ~/Desktop/proyects/trial/
+# Lanzar la app y elegir cualquier carpeta con imágenes de prueba
 # → Deberías ver 3 grupos en Modo 1 (foto_1 ×3, foto_2 ×2, foto_3 ×2)
 # → 4 grupos en Modo 2 (4 imágenes con gradientes similares)
 # → 346 pares en Modo 3
